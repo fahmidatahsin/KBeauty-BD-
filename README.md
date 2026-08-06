@@ -12,5 +12,5 @@ Node.js and Express backend with authentication, product, and category APIs.
 
 ## Team
 
-- Frontend: Sushmita Barua
-- Backend: Project team
+- Frontend: 
+- Backend: 

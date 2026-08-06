@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'product_detail_page.dart';
-
+import 'cart_model.dart';
+import 'cart_page.dart';
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
 
@@ -11,7 +12,7 @@ class CatalogPage extends StatefulWidget {
 class _CatalogPageState extends State<CatalogPage> {
   String selectedCategory = 'All';
   String searchText = '';
-  int cartCount = 0;
+ 
 
   final products = const [
     {
@@ -57,20 +58,20 @@ class _CatalogPageState extends State<CatalogPage> {
     }).map((product) => Map<String, String>.from(product)).toList();
   }
 
-  void addToCart(Map<String, String> product) {
-    if (product['price'] == 'SOLD OUT') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sorry, this product is sold out.')),
-      );
-      return;
-    }
-
-    setState(() => cartCount++);
-
+ void addToCart(Map<String, String> product) {
+  if (product['price'] == 'SOLD OUT') {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${product['name']} added to cart.')),
+      const SnackBar(content: Text('Sorry, this product is sold out.')),
     );
+    return;
   }
+
+  CartScope.of(context).add(product, 1);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('${product['name']} added to cart.')),
+  );
+}
 
   void openDetails(Map<String, String> product) {
     Navigator.push(
@@ -157,6 +158,7 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _header(bool isDesktop) {
+    final cart = CartScope.of(context);
     return Container(
       color: Colors.white,
       padding: EdgeInsets.symmetric(
@@ -191,13 +193,14 @@ class _CatalogPageState extends State<CatalogPage> {
             children: [
               IconButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Your cart has $cartCount item(s).')),
-                  );
-                },
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const CartPage()),
+  );
+},
                 icon: const Icon(Icons.shopping_bag_outlined),
               ),
-              if (cartCount > 0)
+              if (cart.totalItems > 0)
                 Positioned(
                   right: 5,
                   top: 5,
@@ -205,7 +208,7 @@ class _CatalogPageState extends State<CatalogPage> {
                     radius: 8,
                     backgroundColor: Colors.deepOrange,
                     child: Text(
-                      '$cartCount',
+                      '$cart.totalItems',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,

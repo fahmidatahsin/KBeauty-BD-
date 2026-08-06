@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'catalog_page.dart';
+import 'cart_model.dart';
 
+final CartModel appCart = CartModel();
 void main() {
   runApp(const KBeautyApp());
 }
@@ -10,7 +12,9 @@ class KBeautyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return CartScope(
+  cart: appCart,
+  child: MaterialApp(
       title: 'K-BEAUTY BD',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -21,6 +25,7 @@ class KBeautyApp extends StatelessWidget {
         ),
       ),
       home: const HomePage(),
+  )
     );
   }
 }
@@ -51,7 +56,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int cartCount = 0;
+  int cart.totalItems ;
   String searchText = '';
 
   final products = const [
@@ -102,7 +107,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    setState(() => cartCount++);
+    setState(() => cart.totalItems++);
     showMessage('${product.name} added to cart.');
   }
 
@@ -244,10 +249,10 @@ class _HomePageState extends State<HomePage> {
     return Stack(
       children: [
         IconButton(
-          onPressed: () => showMessage('Your cart has $cartCount item(s).'),
+          onPressed: () => showMessage('Your cart has $cart.totalItems item(s).'),
           icon: const Icon(Icons.shopping_bag_outlined),
         ),
-        if (cartCount > 0)
+        if (cart.totalItems > 0)
           Positioned(
             top: 4,
             right: 4,
@@ -255,7 +260,7 @@ class _HomePageState extends State<HomePage> {
               radius: 8,
               backgroundColor: Colors.deepOrange,
               child: Text(
-                '$cartCount',
+                '$cart.totalItems',
                 style: const TextStyle(color: Colors.white, fontSize: 10),
               ),
             ),
@@ -318,10 +323,10 @@ class _HomePageState extends State<HomePage> {
         children: brands
             .map(
               (brand) => TextButton(
-                onPressed: () {
+   onPressed: () {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (_) => const CatalogPage()),
+    MaterialPageRoute(builder: (_) => const CartPage()),
   );
 },
                 child: Text(
