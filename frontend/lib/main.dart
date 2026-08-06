@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'catalog_page.dart';
 import 'cart_model.dart';
 
+
 final CartModel appCart = CartModel();
 void main() {
   runApp(const KBeautyApp());
@@ -56,7 +57,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int cart.totalItems ;
+  
   String searchText = '';
 
   final products = const [
@@ -101,15 +102,25 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void addToCart(Product product) {
-    if (product.soldOut) {
-      showMessage('Sorry, this product is sold out.');
-      return;
-    }
-
-    setState(() => cart.totalItems++);
-    showMessage('${product.name} added to cart.');
+void addToCart(Product product) {
+  if (product.soldOut) {
+    showMessage('Sorry, this product is sold out.');
+    return;
   }
+
+  appCart.add(
+    {
+      'name': product.name,
+      'price': product.price,
+      'image': product.image,
+    },
+    1,
+  );
+
+  setState(() {});
+
+  showMessage('${product.name} added to cart.');
+}
 
   @override
   Widget build(BuildContext context) {
@@ -210,9 +221,16 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               IconButton(
-                onPressed: () => showMessage('Category menu coming later.'),
-                icon: const Icon(Icons.menu),
-              ),
+ onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const CatalogPage(),
+    ),
+  );
+},
+  icon: const Icon(Icons.shopping_bag_outlined),
+),
               const Expanded(
                 child: Text(
                   'K-BEAUTY BD',
@@ -248,11 +266,18 @@ class _HomePageState extends State<HomePage> {
   Widget _cartButton() {
     return Stack(
       children: [
-        IconButton(
-          onPressed: () => showMessage('Your cart has $cart.totalItems item(s).'),
-          icon: const Icon(Icons.shopping_bag_outlined),
-        ),
-        if (cart.totalItems > 0)
+       IconButton(
+  onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const CatalogPage(),
+    ),
+  );
+},
+  icon: const Icon(Icons.shopping_bag_outlined),
+),
+        if (appCart.totalItems > 0)
           Positioned(
             top: 4,
             right: 4,
@@ -260,7 +285,7 @@ class _HomePageState extends State<HomePage> {
               radius: 8,
               backgroundColor: Colors.deepOrange,
               child: Text(
-                '$cart.totalItems',
+                '$appCart.totalItems',
                 style: const TextStyle(color: Colors.white, fontSize: 10),
               ),
             ),
@@ -323,10 +348,12 @@ class _HomePageState extends State<HomePage> {
         children: brands
             .map(
               (brand) => TextButton(
-   onPressed: () {
+  onPressed: () {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (_) => const CartPage()),
+    MaterialPageRoute(
+      builder: (_) => const CatalogPage(),
+    ),
   );
 },
                 child: Text(

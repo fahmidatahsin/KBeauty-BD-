@@ -109,10 +109,11 @@ class CartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 FilledButton(
-                 onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const CartPage()),
+   onPressed: () {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Checkout page coming soon!'),
+    ),
   );
 },
                   child: const Padding(

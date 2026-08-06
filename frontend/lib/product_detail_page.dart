@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'cart_model.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, String> product;
@@ -36,20 +37,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return 'A gentle skincare product designed to cleanse, hydrate, and support healthy-looking skin every day.';
   }
 
-  void buyProduct() {
-    final quantity = int.tryParse(quantityController.text) ?? 1;
+ void buyProduct() {
+  final quantity = int.tryParse(quantityController.text) ?? 1;
 
-    if (isSoldOut) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sorry, this product is sold out.')),
-      );
-      return;
-    }
+  CartScope.of(context).add(widget.product, quantity);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$quantity item(s) added to your cart.')),
-    );
-  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('$quantity item(s) added to your cart.'),
+    ),
+  );
+}
 
   @override
   void dispose() {
