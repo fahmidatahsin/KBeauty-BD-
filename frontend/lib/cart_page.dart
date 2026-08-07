@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'cart_model.dart';
+import 'checkout_page.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -109,18 +110,19 @@ class CartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 FilledButton(
-   onPressed: () {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Checkout page coming soon!'),
-    ),
-  );
-},
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('PROCEED TO CHECKOUT'),
-                  ),
-                ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CheckoutPage(),
+      ),
+    );
+  },
+  child: const Padding(
+    padding: EdgeInsets.symmetric(vertical: 14),
+    child: Text('PROCEED TO CHECKOUT'),
+  ),
+),
               ],
             ),
     );

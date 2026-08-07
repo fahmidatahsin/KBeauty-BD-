@@ -65,6 +65,10 @@ class CartModel extends ChangeNotifier {
     _items.remove(item);
     notifyListeners();
   }
+  void clear() {
+  _items.clear();
+  notifyListeners();
+}
 }
 
 class CartScope extends InheritedNotifier<CartModel> {

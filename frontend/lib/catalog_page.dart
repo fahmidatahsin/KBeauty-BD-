@@ -43,6 +43,121 @@ class _CatalogPageState extends State<CatalogPage> {
       'image': 'assets/images/Bonajour Ginger Aqua Relief Foam Cleanser.jpg',
       'rating': '★★★★☆',
     },
+    {
+  'name': 'Beauty of Joseon Relief Sun: Rice + Probiotics SPF 50+ PA++++ (10ml)',
+  'price': '৳650.00',
+  'category': 'Sun Care',
+  'image': 'assets/images/Beauty-Of-Joseon-Relief-Sun-Rice-Probiotics-pureseoul-10ml-mini_4d056d33-f666-446b-984f-1029d0b139aa.webp',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Beauty of Joseon Glow Serum: Propolis + Niacinamide 30ml',
+  'price': '৳1,850.00',
+  'category': 'Serum',
+  'image': 'assets/images/Beauty of Joseon Glow Serum_Propolis_Niacinamide 30ml.png',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Klairs Midnight Blue Calming Cream 30ml',
+  'price': '৳1,750.00',
+  'category': 'Moisturizer',
+  'image': 'assets/images/klairsmidnightcream.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Beauty of Joseon Glow Deep Serum: Rice + Arbutin 30ml',
+  'price': '৳1,900.00',
+  'category': 'Serum',
+  'image': 'assets/images/Beauty of Joseon Glow Deep Serum Rice  Arbutin 30ml.png',
+  'rating': '★★★★★',
+},
+{
+  'name': 'KLAIRS Freshly Juiced Vitamin Drop 35ml',
+  'price': '৳2,000.00',
+  'category': 'Serum',
+  'image': 'assets/images/KLAIRS Freshly Juiced Vitamin Drop 35ml.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'By Wishtrend Vitamin 75 Maximizing Cream 50ml',
+  'price': '৳2,200.00',
+  'category': 'Moisturizer',
+  'image': 'assets/images/By-Wishtrend-Vitamin-75-Maximizing-Cream-1-340x340.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Klairs Rich Moist Soothing Cream 80ml',
+  'price': '৳2,100.00',
+  'category': 'Moisturizer',
+  'image': 'assets/images/Klairs_Rich-Moist-Soothing-Cream-4.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Beauty of Joseon Matte Sun Stick: Mugwort + Camellia 18g',
+  'price': '৳1,750.00',
+  'category': 'Sun Care',
+  'image': 'assets/images/Beauty of Joseon Matte sun stick  Mugwort Camelia 18g.webp',
+  'rating': '★★★★★',
+},
+{
+  'name': 'KLAIRS Freshly Juiced Vitamin E Mask 15ml',
+  'price': '৳950.00',
+  'category': 'Mask',
+  'image': 'assets/images/KLAIRS Freshly Juiced Vitamin E Mask 15ml.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'Klairs Gentle Black Facial Cleanser 140ml',
+  'price': '৳1,650.00',
+  'category': 'Cleanser',
+  'image': 'assets/images/Klairs_Gentle-Black-Facial-Cleanser-3.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'By Wishtrend Green Tea & Enzyme Powder Wash 70g',
+  'price': '৳1,800.00',
+  'category': 'Cleanser',
+  'image': 'assets/images/BY Wishtrend Green-Tea-Enzyme-Powder-Wash_thumbnail-prodcut-340x340.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'By Wishtrend Mandelic Acid 5% Skin Prep Water 120ml',
+  'price': '৳2,050.00',
+  'category': 'Toner',
+  'image': 'assets/images/wishtrend_mandelic_water.jpg',
+  'rating': '★★★★★',
+},
+
+// SKIN1004 Products
+
+{
+  'name': 'SKIN1004 Madagascar Centella Ampoule 100ml',
+  'price': '৳2,150.00',
+  'category': 'Serum',
+  'image': 'assets/images/skin1004_centella_ampoule.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'SKIN1004 Madagascar Centella Toning Toner 210ml',
+  'price': '৳2,100.00',
+  'category': 'Toner',
+  'image': 'assets/images/skin1004_toning_toner.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'SKIN1004 Hyalu-Cica Water-Fit Sun Serum SPF50+ PA++++',
+  'price': '৳2,050.00',
+  'category': 'Sun Care',
+  'image': 'assets/images/skin1004_hyalu_cica_sun.jpg',
+  'rating': '★★★★★',
+},
+{
+  'name': 'SKIN1004 Madagascar Centella Light Cleansing Oil 200ml',
+  'price': '৳2,250.00',
+  'category': 'Cleanser',
+  'image': 'assets/images/skin1004_cleansing_oil.jpg',
+  'rating': '★★★★★',
+},
   ];
 
   List<Map<String, String>> get filteredProducts {
@@ -224,7 +339,8 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
  Widget _searchAndFilters(bool isDesktop) {
-  const categories = ['All', 'Cleanser', 'Sun Care', 'Pads'];
+  const categories = ['All', 'Cleanser','Moisturizer', 'Sun Care', 'Serum','Toner','Mask','Pads'];
+
 
   IconData categoryIcon(String category) {
     switch (category) {

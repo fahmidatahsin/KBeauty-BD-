@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'catalog_page.dart';
 import 'cart_model.dart';
-
+import 'cart_page.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -147,70 +147,70 @@ void addToCart(Product product) {
   }
 
   Widget _desktopHeader() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 14),
-      child: Row(
-        children: [
-          PopupMenuButton<String>(
-            onSelected: (value) => showMessage('$value category selected'),
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'Cleanser', child: Text('Cleanser')),
-              PopupMenuItem(value: 'Moisturizer', child: Text('Moisturizer')),
-              PopupMenuItem(value: 'Serum', child: Text('Serum')),
-              PopupMenuItem(value: 'Sunscreen', child: Text('Sunscreen')),
-            ],
-            child: const Row(
-              children: [
-                Text(
-                  'Shop By Categories',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Icon(Icons.keyboard_arrow_down),
-              ],
-            ),
-          ),
-          const Spacer(),
-          const Text(
-            'K-BEAUTY BD',
+  return Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+    child: Row(
+  children: [
+
+    // Left section
+    SizedBox(
+      width: 300,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton(
+          onPressed: () {},
+          child: const Text(
+            "LOGIN",
             style: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
-          const Spacer(),
+        ),
+      ),
+    ),
+
+    // Center logo
+    const Expanded(
+      child: Center(
+        child: Text(
+          "K-BEAUTY BD",
+          style: TextStyle(
+            fontSize: 34,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    ),
+
+    // Right section
+    SizedBox(
+      width: 300,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
           SizedBox(
-            width: 210,
+            width: 230,
             child: TextField(
-              onChanged: (value) => setState(() => searchText = value),
               decoration: InputDecoration(
-                hintText: 'Search...',
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                suffixIcon: const Icon(Icons.search),
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           _cartButton(),
-          TextButton(
-            onPressed: () => showMessage('Login page will be created later.'),
-            child: const Text(
-              'LOGIN',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
         ],
       ),
-    );
-  }
+    ),
+  ],
+),
+  );
+}
 
   Widget _mobileHeader() {
     return Container(
@@ -263,41 +263,44 @@ void addToCart(Product product) {
     );
   }
 
-  Widget _cartButton() {
-    return Stack(
-      children: [
-       IconButton(
-  onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const CatalogPage(),
-    ),
-  );
-},
-  icon: const Icon(Icons.shopping_bag_outlined),
-),
-        if (appCart.totalItems > 0)
-          Positioned(
-            top: 4,
-            right: 4,
-            child: CircleAvatar(
-              radius: 8,
-              backgroundColor: Colors.deepOrange,
-              child: Text(
-                '$appCart.totalItems',
-                style: const TextStyle(color: Colors.white, fontSize: 10),
+Widget _cartButton() {
+  return Stack(
+    children: [
+      IconButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CartPage(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.shopping_bag_outlined),
+      ),
+      if (appCart.totalItems > 0)
+        Positioned(
+          top: 4,
+          right: 4,
+          child: CircleAvatar(
+            radius: 8,
+            backgroundColor: Colors.deepOrange,
+            child: Text(
+              '$appCart.totalItems',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
               ),
             ),
           ),
-      ],
-    );
-  }
+        ),
+    ],
+  );
+}
 
   Widget _hero(bool isDesktop) {
     return SizedBox(
       width: double.infinity,
-      height: isDesktop ? 520 : 240,
+      height: isDesktop ? 380 : 240,
       child: Image.asset(
         'assets/images/hero-banner-1.jpg',
         fit: BoxFit.cover,
@@ -308,7 +311,7 @@ void addToCart(Product product) {
   Widget _intro() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(32, 36, 32, 42),
+      padding: const EdgeInsets.fromLTRB(32, 1, 32, 42),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -403,70 +406,14 @@ void addToCart(Product product) {
             ),
     );
   }
-
-  Widget _productCard(Product product) {
-    return InkWell(
-      onTap: () => showMessage('${product.name} details page comes next.'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Image.asset(
-                    product.image,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                if (product.vegan)
-                  const Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Badge(text: 'Vegan', color: Color(0xFF167C59)),
-                  ),
-                if (product.newArrival)
-                  const Positioned(
-                    top: 66,
-                    left: 10,
-                    child: Badge(text: 'New', color: Color(0xFF5635A8)),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            product.name,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            product.price,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: product.soldOut ? Colors.red.shade700 : Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => addToCart(product),
-            child: Text(product.soldOut ? 'SOLD OUT' : 'ADD TO CART'),
-          ),
-        ],
-      ),
-    );
-  }
+Widget _productCard(Product product) {
+  return _HomeProductCard(
+    product: product,
+    onTap: () =>
+        showMessage('${product.name} details page comes next.'),
+    onAddToCart: () => addToCart(product),
+  );
+}
 
   Widget _footer(bool isDesktop) {
     const footerSections = {
@@ -541,6 +488,148 @@ class Badge extends StatelessWidget {
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+class _HomeProductCard extends StatefulWidget {
+  final Product product;
+  final VoidCallback onTap;
+  final VoidCallback onAddToCart;
+
+  const _HomeProductCard({
+    required this.product,
+    required this.onTap,
+    required this.onAddToCart,
+  });
+
+  @override
+  State<_HomeProductCard> createState() => _HomeProductCardState();
+}
+
+class _HomeProductCardState extends State<_HomeProductCard> {
+  bool hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => hovering = true);
+      },
+      onExit: (_) {
+        setState(() => hovering = false);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(
+          0,
+          hovering ? -9 : 0,
+          0,
+        ),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: hovering ? 0.18 : 0.06,
+              ),
+              blurRadius: hovering ? 18 : 8,
+              offset: Offset(
+                0,
+                hovering ? 10 : 4,
+              ),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image.asset(
+                      product.image,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+
+                  if (product.vegan)
+                    const Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Badge(
+                        text: 'Vegan',
+                        color: Color(0xFF167C59),
+                      ),
+                    ),
+
+                  if (product.newArrival)
+                    const Positioned(
+                      top: 66,
+                      left: 10,
+                      child: Badge(
+                        text: 'New',
+                        color: Color(0xFF5635A8),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Text(
+              product.name,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              product.price,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: product.soldOut
+                    ? Colors.red.shade700
+                    : Colors.black54,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            OutlinedButton(
+              onPressed: widget.onTap,
+              child: const Text('VIEW DETAILS'),
+            ),
+
+            if (!product.soldOut)
+              TextButton(
+                onPressed: widget.onAddToCart,
+                child: const Text('ADD TO CART'),
+              ),
+          ],
         ),
       ),
     );
