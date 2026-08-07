@@ -38,6 +38,9 @@ const getAllProducts = async (req, res) => {
     const minPrice = req.query.minPrice;
     const maxPrice = req.query.maxPrice;
     const sort = req.query.sort;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const searchQuery = keyword
     ? {
         name: {
@@ -61,7 +64,10 @@ if (minPrice || maxPrice) {
     }
 }
 
-    let query = Product.find(searchQuery).populate("category");
+    let query = Product.find(searchQuery)
+    .populate("category")
+    .skip(skip)
+    .limit(limit);
     if (sort === "price_asc") {
     query = query.sort({ price: 1 });
 } else if (sort === "price_desc") {
@@ -71,8 +77,14 @@ if (minPrice || maxPrice) {
 } else if (sort === "oldest") {
     query = query.sort({ createdAt: 1 });
 }
+const totalProducts = await Product.countDocuments(searchQuery);
 const products = await query;
-res.status(200).json(products);
+res.status(200).json({
+    products,
+    currentPage: page,
+    totalPages: Math.ceil(totalProducts / limit),
+    totalProducts,
+});
 };
 const getSingleProduct = async (req, res) => {
 const { id } = req.params;
