@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'catalog_page.dart';
 import 'cart_model.dart';
 import 'cart_page.dart';
+import 'brand_page.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -333,47 +334,59 @@ Widget _cartButton() {
     );
   }
 
-  Widget _brandFilters() {
-    const brands = [
-      'ALL',
-      'DEAR KLAIRS',
-      'BY WISHTREND',
-      'BEAUTY OF JOSEON',
-      'AXIS-Y',
-    ];
+ Widget _brandFilters() {
+  const brands = [
+    'ALL',
+    'DEAR KLAIRS',
+    'SKIN1004',
+    'AXIS-Y',
+    'BEAUTY OF JOSEON',
+    'BY WISHTREND',
+    'BONAJOUR',
+  ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 12,
-        runSpacing: 8,
-        children: brands
-            .map(
-              (brand) => TextButton(
-  onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const CatalogPage(),
-    ),
-  );
-},
-                child: Text(
-                  brand,
-                  style: TextStyle(
-                    color: Colors.blue.shade800,
-                    decoration: TextDecoration.underline,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+    child: Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 12,
+      runSpacing: 8,
+      children: brands.map((brand) {
+        return TextButton(
+ onPressed: () {
+  if (brand == 'ALL') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CatalogPage(),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BrandPage(
+          brand: brand,
+          products: allProducts,
+        ),
       ),
     );
   }
+},
+          child: Text(
+            brand,
+            style: TextStyle(
+              color: Colors.blue.shade800,
+              decoration: TextDecoration.underline,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        );
+      }).toList(),
+    ),
+  );
+}
 
   Widget _productSection(double width) {
     final isMobile = width < 650;
