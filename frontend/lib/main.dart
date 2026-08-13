@@ -3,6 +3,7 @@ import 'catalog_page.dart';
 import 'cart_model.dart';
 import 'cart_page.dart';
 import 'brand_page.dart';
+import 'product_detail_page.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -34,16 +35,20 @@ class KBeautyApp extends StatelessWidget {
 
 class Product {
   final String name;
+  final String brand;
   final String price;
   final String image;
+  final String rating;
   final bool soldOut;
   final bool vegan;
   final bool newArrival;
 
   const Product({
     required this.name,
+    required this.brand,
     required this.price,
     required this.image,
+    required this.rating,
     this.soldOut = false,
     this.vegan = false,
     this.newArrival = false,
@@ -62,31 +67,42 @@ class _HomePageState extends State<HomePage> {
   String searchText = '';
 
   final products = const [
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Pad 60 Pads',
-      price: '৳1,700.00',
-      image: 'assets/images/GinerReliefPad.jpg',
-      vegan: true,
-      newArrival: true,
-    ),
-    Product(
-      name: 'Bonajour Jeju Milk Soft Foaming Cleanser 160ml',
-      price: '৳1,700.00',
-      image: 'assets/images/boanjourFoamingCleanser.webp',
-    ),
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Sun Cream 40ml',
-      price: '৳1,700.00',
-      image: 'assets/images/bonajourGingercream.png',
-    ),
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Foam Cleanser',
-      price: 'SOLD OUT',
-      image: 'assets/images/Bonajour Ginger Aqua Relief Foam Cleanser.jpg',
-      soldOut: true,
-      newArrival: true,
-    ),
-  ];
+  Product(
+    name: 'Bonajour Ginger Aqua Relief Pad 60 Pads',
+    brand: 'BONAJOUR',
+    price: '৳1,700.00',
+    image: 'assets/images/GinerReliefPad.jpg',
+    rating: '★★★★★',
+    vegan: true,
+    newArrival: true,
+  ),
+
+  Product(
+    name: 'Bonajour Jeju Milk Soft Foaming Cleanser 160ml',
+    brand: 'BONAJOUR',
+    price: '৳1,700.00',
+    image: 'assets/images/boanjourFoamingCleanser.webp',
+    rating: '★★★★★',
+  ),
+
+  Product(
+    name: 'Bonajour Ginger Aqua Relief Sun Cream 40ml',
+    brand: 'BONAJOUR',
+    price: '৳1,700.00',
+    image: 'assets/images/bonajourGingercream.png',
+    rating: '★★★★★',
+  ),
+
+  Product(
+    name: 'Bonajour Ginger Aqua Relief Foam Cleanser',
+    brand: 'BONAJOUR',
+    price: 'SOLD OUT',
+    image: 'assets/images/Bonajour Ginger Aqua Relief Foam Cleanser.jpg',
+    rating: '★★★★☆',
+    soldOut: true,
+    newArrival: true,
+  ),
+];
 
   List<Product> get visibleProducts {
     return products
@@ -109,14 +125,16 @@ void addToCart(Product product) {
     return;
   }
 
-  appCart.add(
-    {
-      'name': product.name,
-      'price': product.price,
-      'image': product.image,
-    },
-    1,
-  );
+appCart.add(
+  {
+    'name': product.name,
+    'brand': product.brand,
+    'price': product.price,
+    'image': product.image,
+    'rating': product.rating,
+  },
+  1,
+);
 
   setState(() {});
 
@@ -422,8 +440,24 @@ Widget _cartButton() {
 Widget _productCard(Product product) {
   return _HomeProductCard(
     product: product,
-    onTap: () =>
-        showMessage('${product.name} details page comes next.'),
+    onTap: () {
+      final productData = <String, String>{
+        'name': product.name,
+        'brand': product.brand,
+        'price': product.price,
+        'image': product.image,
+        'rating': product.rating,
+      };
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+        builder: (_) => ProductDetailPage(
+      product: productData,
+    ),
+        ),
+      );
+    },
     onAddToCart: () => addToCart(product),
   );
 }
@@ -605,30 +639,56 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 12),
 
-            Text(
-              product.name,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+           
+Text(
+  product.name,
+  textAlign: TextAlign.center,
+  maxLines: 2,
+  overflow: TextOverflow.ellipsis,
+  style: const TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+  ),
+),
 
-            const SizedBox(height: 6),
+const SizedBox(height: 5),
 
-            Text(
-              product.price,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: product.soldOut
-                    ? Colors.red.shade700
-                    : Colors.black54,
-              ),
-            ),
+Text(
+  product.brand,
+  textAlign: TextAlign.center,
+  style: const TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w800,
+    color: Color(0xFF1C6A50),
+    letterSpacing: 0.8,
+  ),
+),
+
+const SizedBox(height: 5),
+
+Text(
+  product.rating,
+  textAlign: TextAlign.center,
+  style: const TextStyle(
+    color: Color(0xFFFFC107),
+    fontSize: 19,
+    letterSpacing: 1,
+  ),
+),
+
+const SizedBox(height: 4),
+
+Text(
+  product.price,
+  textAlign: TextAlign.center,
+  style: TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: product.soldOut
+        ? Colors.red.shade700
+        : Colors.black54,
+  ),
+),
 
             const SizedBox(height: 8),
 

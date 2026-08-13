@@ -38,7 +38,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
  void buyProduct() {
+  if (isSoldOut) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sorry, this product is sold out.'),
+      ),
+    );
+    return;
+  }
+
   final quantity = int.tryParse(quantityController.text) ?? 1;
+
+  if (quantity <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter a valid quantity.'),
+      ),
+    );
+    return;
+  }
 
   CartScope.of(context).add(widget.product, quantity);
 
