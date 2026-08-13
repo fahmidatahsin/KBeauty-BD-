@@ -91,6 +91,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
         ),
         const SizedBox(height: 18),
+
+        Text(
+  widget.product['brand'] ?? '',
+  style: const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: Color(0xFF1C6A50),
+    letterSpacing: 1,
+  ),
+),
+const SizedBox(height: 8),
+
         Text(
           productPrice,
           style: TextStyle(

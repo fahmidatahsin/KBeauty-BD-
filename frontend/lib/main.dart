@@ -4,6 +4,7 @@ import 'cart_model.dart';
 import 'cart_page.dart';
 import 'brand_page.dart';
 import 'product_detail_page.dart';
+import 'login_page.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -178,18 +179,26 @@ appCart.add(
       child: Align(
         alignment: Alignment.centerLeft,
         child: TextButton(
-          onPressed: () {},
-          child: const Text(
-            "LOGIN",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LoginPage(),
+      ),
+    );
+  },
+  child: const Text(
+    'LOGIN',
+    style: TextStyle(
+      color: Colors.black,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
       ),
     ),
+
+    
 
     // Center logo
     const Expanded(
