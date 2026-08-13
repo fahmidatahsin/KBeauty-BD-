@@ -2,8 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'forgot_password_page.dart';
-import 'register_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -320,43 +319,7 @@ class _LoginPageState extends State<LoginPage> {
   
   const SizedBox(height: 12),
 
-TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ForgotPasswordPage(),
-      ),
-    );
-  },
-  child: const Text(
-    'Forgot Password?',
-    style: TextStyle(
-      color: Colors.blue,
-      fontSize: 14,
-    ),
-  ),
-),
 
-const SizedBox(height: 4),
-
-TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const RegisterPage(),
-      ),
-    );
-  },
-  child: const Text(
-    'Create a new account',
-    style: TextStyle(
-      color: Colors.blue,
-      fontSize: 14,
-    ),
-  ),
-),
                     const SizedBox(height: 8),
 
                     // =================================================
