@@ -52,8 +52,6 @@ class _LoginPageState extends State<LoginPage> {
           data['message'] ?? 'Login successful!',
         );
 
-        // We will handle JWT token storage
-        // and page redirection after testing.
       } else {
         _showMessage(
           data['message'] ?? 'Invalid email or password.',
