@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'register_page.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -325,10 +326,13 @@ class _LoginPageState extends State<LoginPage> {
                     // =================================================
                     TextButton(
                       onPressed: () {
-                        _showMessage(
-                          'Registration page coming next.',
-                        );
-                      },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const RegisterPage(),
+    ),
+  );
+},
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           vertical: 4,
