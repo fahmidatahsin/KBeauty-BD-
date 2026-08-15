@@ -48,16 +48,21 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        _showMessage(
-          data['message'] ?? 'Login successful!',
-        );
+      if (!mounted) return;
 
-      } else {
-        _showMessage(
-          data['message'] ?? 'Invalid email or password.',
-        );
-      }
+if (response.statusCode == 200) {
+  _showMessage(
+    data['message'] ?? 'Login successful!',
+  );
+
+  // Return to HomePage and update the header.
+  Navigator.pop(context, true);
+} else {
+  _showMessage(
+    data['message'] ?? 'Invalid email or password.',
+  );
+}
+
     } catch (e) {
       if (!mounted) return;
 

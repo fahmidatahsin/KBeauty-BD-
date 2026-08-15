@@ -5,6 +5,7 @@ import 'cart_page.dart';
 import 'brand_page.dart';
 import 'product_detail_page.dart';
 import 'login_page.dart';
+import 'profile_page.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -64,8 +65,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  
+
   String searchText = '';
+  bool isLoggedIn = false;
 
   final products = const [
   Product(
@@ -104,6 +106,21 @@ class _HomePageState extends State<HomePage> {
     newArrival: true,
   ),
 ];
+
+Future<void> openLoginPage() async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const LoginPage(),
+    ),
+  );
+
+  if (result == true && mounted) {
+    setState(() {
+      isLoggedIn = true;
+    });
+  }
+}
 
   List<Product> get visibleProducts {
     return products
@@ -166,130 +183,182 @@ appCart.add(
     );
   }
 
-  Widget _desktopHeader() {
+ Widget _desktopHeader() {
   return Container(
     color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 30,
+      vertical: 15,
+    ),
     child: Row(
-  children: [
-
-    // Left section
-    SizedBox(
-      width: 300,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LoginPage(),
-      ),
-    );
-  },
-  child: const Text(
-    'LOGIN',
-    style: TextStyle(
-      color: Colors.black,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-),
-      ),
-    ),
-
-    
-
-    // Center logo
-    const Expanded(
-      child: Center(
-        child: Text(
-          "K-BEAUTY BD",
-          style: TextStyle(
-            fontSize: 34,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+      children: [
+        // LEFT: LOGIN / PROFILE
+        SizedBox(
+          width: 180,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: isLoggedIn
+                ? IconButton(
+                    tooltip: 'My Profile',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfilePage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.account_circle_outlined,
+                      size: 30,
+                    ),
+                  )
+                : TextButton(
+                    onPressed: openLoginPage,
+                    child: const Text(
+                      'LOGIN',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
           ),
         ),
-      ),
-    ),
 
-    // Right section
-    SizedBox(
-      width: 300,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          SizedBox(
-            width: 230,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search...",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+        // CENTER: LOGO
+        const Expanded(
+          child: Center(
+            child: Text(
+              'K-BEAUTY BD',
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
               ),
             ),
           ),
-          const SizedBox(width: 10),
-          _cartButton(),
-        ],
-      ),
-    ),
-  ],
-),
-  );
-}
+        ),
 
-  Widget _mobileHeader() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
-      child: Column(
-        children: [
-          Row(
+        // RIGHT: SEARCH + CART
+        SizedBox(
+          width: 400,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              IconButton(
- onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const CatalogPage(),
-    ),
-  );
-},
-  icon: const Icon(Icons.shopping_bag_outlined),
-),
-              const Expanded(
-                child: Text(
-                  'K-BEAUTY BD',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w900,
+              SizedBox(
+                width: 260,
+                height: 42,
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      searchText = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: const Color(0xFFF1F1F1),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
+
+              const SizedBox(width: 10),
+
               _cartButton(),
             ],
           ),
-          const SizedBox(height: 8),
-          TextField(
-            onChanged: (value) => setState(() => searchText = value),
-            decoration: InputDecoration(
-              hintText: 'Search products...',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: const Color(0xFFF1F1F1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide.none,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _mobileHeader() {
+  return Container(
+    color: Colors.white,
+    padding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            // PROFILE / LOGIN
+            isLoggedIn
+                ? IconButton(
+                    tooltip: 'My Profile',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfilePage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.account_circle_outlined,
+                    ),
+                  )
+                : TextButton(
+                    onPressed: openLoginPage,
+                    child: const Text(
+                      'LOGIN',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+            // LOGO
+            const Expanded(
+              child: Text(
+                'K-BEAUTY BD',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
+
+            // CART
+            _cartButton(),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // SEARCH
+        TextField(
+          onChanged: (value) {
+            setState(() {
+              searchText = value;
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'Search products...',
+            prefixIcon: const Icon(Icons.search),
+            filled: true,
+            fillColor: const Color(0xFFF1F1F1),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25),
+              borderSide: BorderSide.none,
+            ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
 Widget _cartButton() {
   return Stack(
