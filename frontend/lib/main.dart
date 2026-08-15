@@ -122,14 +122,32 @@ Future<void> openLoginPage() async {
   }
 }
 
-  List<Product> get visibleProducts {
-    return products
-        .where(
-          (product) =>
-              product.name.toLowerCase().contains(searchText.toLowerCase()),
-        )
-        .toList();
+ List<Product> get visibleProducts {
+  if (searchText.trim().isEmpty) {
+    return products;
   }
+
+  final query = searchText.trim().toLowerCase();
+
+  return allProducts
+      .where((product) {
+        final name = product['name']?.toLowerCase() ?? '';
+        final brand = product['brand']?.toLowerCase() ?? '';
+
+        return name.contains(query) || brand.contains(query);
+      })
+      .map(
+        (product) => Product(
+          name: product['name'] ?? '',
+          brand: product['brand'] ?? '',
+          price: product['price'] ?? '',
+          image: product['image'] ?? '',
+          rating: product['rating'] ?? '',
+          soldOut: product['price'] == 'SOLD OUT',
+        ),
+      )
+      .toList();
+}
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -170,11 +188,31 @@ appCart.add(
             child: Column(
               children: [
                 if (isDesktop) _desktopHeader() else _mobileHeader(),
-                _hero(isDesktop),
-                _intro(),
-                _brandFilters(),
-                _productSection(constraints.maxWidth),
-                _footer(isDesktop),
+
+if (searchText.trim().isEmpty) ...[
+  _hero(isDesktop),
+  _intro(),
+  _brandFilters(),
+],
+
+if (searchText.trim().isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.fromLTRB(32, 30, 32, 0),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'SEARCH RESULTS',
+        style: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1,
+        ),
+      ),
+    ),
+  ),
+
+_productSection(constraints.maxWidth),
+
               ],
             ),
           );
@@ -539,58 +577,6 @@ Widget _productCard(Product product) {
     onAddToCart: () => addToCart(product),
   );
 }
-
-  Widget _footer(bool isDesktop) {
-    const footerSections = {
-      'CUSTOMER SERVICE': [
-        'Help & Contact Us',
-        'Terms & Conditions',
-        'Refund & Return Policy',
-        'Showroom Address',
-      ],
-      'COMPANY': ['Wholesale Inquiries', 'Our Services', 'Privacy Policy'],
-      'SOCIAL MEDIA': ['Facebook', 'Instagram', 'Twitter'],
-      'PROFILE': ['My Account', 'Checkout', 'Wishlist', 'Cart'],
-    };
-
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 40),
-      child: Wrap(
-        alignment: WrapAlignment.spaceAround,
-        runSpacing: 30,
-        children: footerSections.entries.map((section) {
-          return SizedBox(
-            width: isDesktop ? 220 : 160,
-            child: Column(
-              children: [
-                Text(
-                  section.key,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 15),
-                ...section.value.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      item,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 }
 
 class Badge extends StatelessWidget {
