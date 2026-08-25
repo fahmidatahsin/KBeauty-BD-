@@ -313,7 +313,7 @@ List<Map<String, String>> get products => allProducts;
                 ),
                 children: [
                   const Text(
-                    'EXPLORE SKINCARE',
+                    'EXPLORE CATALOG',
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w900,
