@@ -9,14 +9,14 @@ const {
 } = require("../controllers/authController");
 
 // 👉 middleware import কর
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 // ✅ routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // 🔐 protected route
-router.get("/profile", authMiddleware, (req, res) => {
+router.get("/profile", protect, (req, res) => {
   res.json({
     message: "Profile data",
     user: req.user,

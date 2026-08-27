@@ -1,7 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'auth_service.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 
@@ -35,13 +35,8 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:5000/api/auth/login'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       final data = jsonDecode(response.body);
@@ -50,19 +45,17 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-if (response.statusCode == 200) {
-  _showMessage(
-    data['message'] ?? 'Login successful!',
-  );
+      if (response.statusCode == 200) {
+        final token = data['token'];
 
-  // Return to HomePage and update the header.
-  Navigator.pop(context, true);
-} else {
-  _showMessage(
-    data['message'] ?? 'Invalid email or password.',
-  );
-}
-
+        if (token != null && token.toString().isNotEmpty) {
+          await AuthService.saveToken(token.toString());
+        }
+        _showMessage(data['message'] ?? 'Login successful!');
+        Navigator.pop(context, true);
+      } else {
+        _showMessage(data['message'] ?? 'Invalid email or password.');
+      }
     } catch (e) {
       if (!mounted) return;
 
@@ -80,11 +73,9 @@ if (response.statusCode == 200) {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -107,15 +98,10 @@ if (response.statusCode == 200) {
           // =========================================================
           // BACKGROUND IMAGE
           // =========================================================
-          Image.asset(
-            'assets/images/hero-banner-2.jpg',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/hero-banner-2.jpg', fit: BoxFit.cover),
 
           // Slight white overlay
-          Container(
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
+          Container(color: Colors.white.withValues(alpha: 0.18)),
 
           // =========================================================
           // LOGIN BOX
@@ -144,8 +130,7 @@ if (response.statusCode == 200) {
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // =================================================
                     // TITLE
@@ -181,31 +166,20 @@ if (response.statusCode == 200) {
                     // =================================================
                     TextField(
                       controller: emailController,
-                      keyboardType:
-                          TextInputType.emailAddress,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor:
-                            Colors.white.withValues(alpha: 0.85),
+                        fillColor: Colors.white.withValues(alpha: 0.85),
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
-                        enabledBorder:
-                            OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
-                        focusedBorder:
-                            OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
                           borderSide: const BorderSide(
                             color: Color(0xFF1976D2),
                             width: 1.5,
@@ -238,27 +212,17 @@ if (response.statusCode == 200) {
                       obscureText: obscurePassword,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor:
-                            Colors.white.withValues(alpha: 0.85),
+                        fillColor: Colors.white.withValues(alpha: 0.85),
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
-                        enabledBorder:
-                            OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
-                        focusedBorder:
-                            OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(4),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
                           borderSide: const BorderSide(
                             color: Color(0xFF1976D2),
                             width: 1.5,
@@ -267,8 +231,7 @@ if (response.statusCode == 200) {
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
-                              obscurePassword =
-                                  !obscurePassword;
+                              obscurePassword = !obscurePassword;
                             });
                           },
                           icon: Icon(
@@ -288,24 +251,20 @@ if (response.statusCode == 200) {
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed:
-                            isLoading ? null : login,
+                        onPressed: isLoading ? null : login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF087EF5),
+                          backgroundColor: const Color(0xFF087EF5),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         child: isLoading
                             ? const SizedBox(
                                 height: 22,
                                 width: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
@@ -314,46 +273,45 @@ if (response.statusCode == 200) {
                                 'Login',
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight:
-                                      FontWeight.w500,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                       ),
                     ),
-  
-  const SizedBox(height: 12),
 
-const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-// =================================================
-// FORGOT PASSWORD
-// =================================================
-TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ForgotPasswordPage(),
-      ),
-    );
-  },
-  style: TextButton.styleFrom(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-  ),
-  child: const Text(
-    'Forgot Password?',
-    style: TextStyle(
-      color: Color(0xFF087EF5),
-      fontSize: 14,
-    ),
-  ),
-),
+                    const SizedBox(height: 8),
 
-const SizedBox(height: 4),
+                    // =================================================
+                    // FORGOT PASSWORD
+                    // =================================================
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ForgotPasswordPage(),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                      ),
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Color(0xFF087EF5),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
 
-// =================================================
-// SIGN UP
-// =================================================
+                    const SizedBox(height: 4),
+
+                    // =================================================
+                    // SIGN UP
+                    // =================================================
                     const SizedBox(height: 8),
 
                     // =================================================
@@ -361,17 +319,15 @@ const SizedBox(height: 4),
                     // =================================================
                     TextButton(
                       onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const RegisterPage(),
-    ),
-  );
-},
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterPage(),
+                          ),
+                        );
+                      },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                       ),
                       child: const Text(
                         'Create a new account',

@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -9,10 +10,10 @@ const {
   paymentIPN,
 } = require("../controllers/paymentController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 // 💳 Initiate Payment
-router.post("/initiate", authMiddleware, initiatePayment);
+router.post("/initiate", protect, initiatePayment);
 
 // ✅ Payment Success
 router.post("/success", paymentSuccess);

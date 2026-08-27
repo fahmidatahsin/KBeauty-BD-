@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -10,36 +11,21 @@ const {
   updateOrderStatus,
 } = require("../controllers/adminController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
+
 const adminMiddleware = require("../middleware/adminMiddleware");
 
-// =========================
-// 👥 MANAGE USERS
-// =========================
+router.get("/users", protect, adminMiddleware, getAllUsers);
+router.delete("/users/:id", protect, adminMiddleware, deleteUser);
 
-router.get("/users", authMiddleware, adminMiddleware, getAllUsers);
+router.get("/products", protect, adminMiddleware, getAllProducts);
+router.delete("/products/:id", protect, adminMiddleware, deleteProduct);
 
-router.delete("/users/:id", authMiddleware, adminMiddleware, deleteUser);
-
-
-// =========================
-// 📦 MANAGE PRODUCTS
-// =========================
-
-router.get("/products", authMiddleware, adminMiddleware, getAllProducts);
-
-router.delete("/products/:id", authMiddleware, adminMiddleware, deleteProduct);
-
-
-// =========================
-// 🛒 MANAGE ORDERS
-// =========================
-
-router.get("/orders", authMiddleware, adminMiddleware, getAllOrders);
+router.get("/orders", protect, adminMiddleware, getAllOrders);
 
 router.put(
   "/orders/:id",
-  authMiddleware,
+  protect,
   adminMiddleware,
   updateOrderStatus
 );
