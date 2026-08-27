@@ -3,10 +3,17 @@ import 'product_detail_page.dart';
 import 'cart_model.dart';
 import 'cart_page.dart';
 
-/// Shared product list.
-/// BrandPage can access this by importing catalog_page.dart.
-
 const List<Map<String, String>> allProducts = [ 
+  {
+  'name':
+      'SKIN1004 Madagascar Centella Tone Brightening Cleansing Gel Foam 125ml',
+  'price': '৳1,450.00',
+  'category': 'Cleanser',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Madagascar Centella Tone Brightening Cleansing Gel Foam 125ml.jpeg',
+  'rating': '★★★★★',
+},
   {
     'name': 'Bonajour Ginger Aqua Relief Pad 60 Pads',
     'price': '৳1,700.00',
@@ -16,6 +23,37 @@ const List<Map<String, String>> allProducts = [
     'rating': '★★★★★',
   },
   {
+  'name':
+      'AXIS-Y Heartleaf My Type Calming Cream 60ml',
+  'price': '৳1,650.00',
+  'category': 'Moisturizer',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y Heartleaf My Type Calming Cream 60ml.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Soothing Cream 75ml',
+  'price': '৳1,850.00',
+  'category': 'Moisturizer',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004-Centella Soothing Cream 75ml.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Probio-Cica Enrich Cream 50ml',
+  'price': '৳2,250.00',
+  'category': 'Moisturizer',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004-Probio-Cica Enrich Cream 50ml.jpeg',
+  'rating': '★★★★★',
+},
+
+  {
     'name': 'Bonajour Jeju Milk Soft Foaming Cleanser 160ml',
     'price': '৳1,700.00',
     'category': 'Cleanser',
@@ -24,6 +62,16 @@ const List<Map<String, String>> allProducts = [
     'rating': '★★★★★',
   },
   {
+  'name':
+      'Dear, KLAIRS Gentle Black Fresh Cleansing Oil 150ml',
+  'price': '৳2,100.00',
+  'category': 'Cleanser',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Cleansing Oil 150ml.jpeg',
+  'rating': '★★★★★',
+},
+  {
     'name': 'Bonajour Ginger Aqua Relief Sun Cream 40ml',
     'price': '৳1,700.00',
     'category': 'Sun Care',
@@ -31,6 +79,16 @@ const List<Map<String, String>> allProducts = [
     'image': 'assets/images/bonajourGingercream.png',
     'rating': '★★★★★',
   },
+  {
+  'name':
+      'AXIS-Y Cera-Heart My Type Duo Cream 60ml',
+  'price': '৳2,200.00',
+  'category': 'Moisturizer',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y Duo Cream 60ml.jpeg',
+  'rating': '★★★★★',
+},
   {
     'name': 'Bonajour Ginger Aqua Relief Foam Cleanser',
     'price': 'SOLD OUT',
@@ -41,15 +99,138 @@ const List<Map<String, String>> allProducts = [
     'rating': '★★★★☆',
   },
   {
-    'name':
-        'Beauty of Joseon Relief Sun: Rice + Probiotics SPF 50+ PA++++ (10ml)',
-    'price': '৳650.00',
-    'category': 'Sun Care',
-    'brand': 'BEAUTY OF JOSEON',
-    'image':
-        'assets/images/Beauty-Of-Joseon-Relief-Sun-Rice-Probiotics-pureseoul-10ml-mini_4d056d33-f666-446b-984f-1029d0b139aa.webp',
-    'rating': '★★★★★',
-  },
+  'name':
+      'SKIN1004 Madagascar Centella Hyalu-Cica Moisture Cream 75ml',
+  'price': '৳2,200.00',
+  'category': 'Moisturizer',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Hyalu-Cica Moisture Cream.jpeg',
+  'rating': '★★★★★',
+},
+
+  {
+  'name':
+      'SKIN1004 Madagascar Centella Hyalu-Cica Water-Fit Sun Serum 50ml',
+  'price': '৳1,850.00',
+  'category': 'Sun Care',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Water-Fit Sun Serum.jpeg',
+  'rating': '★★★★★',
+},
+  {
+  'name':
+      'AXIS-Y Daily Purifying Treatment Toner 200ml',
+  'price': '৳1,650.00',
+  'category': 'Toner',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y Daily Purifying Toner.jpeg',
+  'rating': '★★★★★',
+},
+
+{
+  'name':
+      'Dear KLAIRS Gentle Black Facial Cleanser 20mL',
+  'price': '৳600.00',
+  'category': 'Cleanser',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRSGentleBlackFacialCleanser20mL.webp',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'AXIS-Y Dark Spot Correcting Glow Toner 120ml',
+  'price': '৳1,850.00',
+  'category': 'Toner',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y Correcting Glow Toner.jpeg',
+  'rating': '★★★★★',
+},
+
+{
+  'name':
+      'Dear, KLAIRS Fundamental Water Gel Cream 50ml',
+  'price': '৳2,200.00',
+  'category': 'Moisturizer',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Water Gel Cream.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Probio-Cica Intensive Ampoule 50ml',
+  'price': '৳2,250.00',
+  'category': 'Serum',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Probio-Cica Intensive Ampoule.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Dear, KLAIRS All-day Airy Sunscreen SPF50+ PA++++ 50ml',
+  'price': '৳2,000.00',
+  'category': 'Sun Care',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Sunscreen.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Calming Serum Green Tea + Panthenol 30ml',
+  'price': '৳1,650.00',
+  'category': 'Serum',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Calming Serum Green Tea + Panthenol.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Light On Serum Centella + Vita C 30ml',
+  'price': '৳1,650.00',
+  'category': 'Serum',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Serum Centella + Vita C.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Dear, KLAIRS Rich Moist Soothing Serum 80ml',
+  'price': '৳2,100.00',
+  'category': 'Serum',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Serum.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Dear, KLAIRS Midnight Blue Youth Activating Drop 20ml',
+  'price': '৳2,500.00',
+  'category': 'Serum',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Serum Drop.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Hyalu-Cica Blue Serum 50ml',
+  'price': '৳1,950.00',
+  'category': 'Serum',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Blue Serum.jpeg',
+  'rating': '★★★★★',
+},
   {
     'name':
         'Beauty of Joseon Glow Serum: Propolis + Niacinamide 30ml',
@@ -61,102 +242,209 @@ const List<Map<String, String>> allProducts = [
     'rating': '★★★★★',
   },
   {
-    'name': 'Klairs Midnight Blue Calming Cream 30ml',
+  'name':
+      'SKIN1004 Madagascar Centella Watergel Sheet Ampoule Mask 25ml',
+  'price': '৳450.00',
+  'category': 'Mask',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Watergel Sheet Ampoule Mask.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Hyalu-Cica Hydrating Mask 23ml',
+  'price': '৳450.00',
+  'category': 'Mask',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Hydrating Mask.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Dear, KLAIRS Rich Moist Soothing Tencel Sheet Mask 25ml',
+  'price': '৳450.00',
+  'category': 'Mask',
+  'brand': 'KLAIRS',
+  'image':
+      'assets/images/KLAIRS Tencel Sheet Mask.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Relief Sun Rice + Probiotics SPF50+ PA++++ 50ml',
+  'price': '৳1,650.00',
+  'category': 'Sun Care',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Relief Sun Rice + Probiotics SPF50+ PA++++ 50ml.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Relief Sun Aqua-Fresh Rice + B5 SPF50+ PA++++ 50ml',
+  'price': '৳1,650.00',
+  'category': 'Sun Care',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Relief Sun Aqua-Fresh.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Ginseng Moist Sun Serum SPF50+ PA++++ 50ml',
+  'price': '৳1,750.00',
+  'category': 'Sun Care',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Ginseng Moist Sun Serum.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Dynasty Cream 50ml',
+  'price': '৳1,850.00',
+  'category': 'Moisturizer',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Dynasty Cream.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Red Bean Cream 50ml',
+  'price': '৳1,750.00',
+  'category': 'Moisturizer',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Red Bean Cream.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Hyalu-Cica Brightening Toner 210ml',
+  'price': '৳1,750.00',
+  'category': 'Toner',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Hyalu-Cica Brightening Toner.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'SKIN1004 Madagascar Centella Tone Brightening Boosting Toner 210ml',
+  'price': '৳1,950.00',
+  'category': 'Toner',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Boosting Toner.jpeg',
+  'rating': '★★★★★',
+},
+  {
+  'name':
+      'AXIS-Y Mugwort Pore Clarifying Wash Off Pack 100ml',
+  'price': '৳1,800.00',
+  'category': 'Mask',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y Mugwort Pore Clarifying Wash Off Pack 100ml.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Red Bean Refreshing Pore Mask 140ml',
+  'price': '৳1,650.00',
+  'category': 'Mask',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Red Bean Refreshing Pore Mask.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'Beauty of Joseon Ground Rice and Honey Glow Mask 150ml',
+  'price': '৳1,650.00',
+  'category': 'Mask',
+  'brand': 'BEAUTY OF JOSEON',
+  'image':
+      'assets/images/Beauty of Joseon Ground Rice and Honey Glow Mask 150ml.jpeg',
+  'rating': '★★★★★',
+},
+{
+  'name':
+      'AXIS-Y New Skin Resolution Gel Mask 100ml',
+  'price': '৳1,850.00',
+  'category': 'Mask',
+  'brand': 'AXIS-Y',
+  'image':
+      'assets/images/AXIS-Y New Skin Resolution Gel Mask 100ml.jpeg',
+  'rating': '★★★★★',
+},
+  {
+    'name': 'KLAIRS Midnight Blue Calming Cream 30ml',
     'price': '৳1,750.00',
     'category': 'Moisturizer',
-    'brand': 'DEAR KLAIRS',
-    'image': 'assets/images/klairsmidnightcream.jpg',
+    'brand': 'KLAIRS',
+    'image': 'assets/images/KLAIRSmidnightcream.jpg',
     'rating': '★★★★★',
   },
   {
-    'name':
-        'Beauty of Joseon Glow Deep Serum: Rice + Arbutin 30ml',
-    'price': '৳1,900.00',
-    'category': 'Serum',
-    'brand': 'BEAUTY OF JOSEON',
-    'image':
-        'assets/images/Beauty of Joseon Glow Deep Serum Rice  Arbutin 30ml.png',
-    'rating': '★★★★★',
-  },
+  'name':
+      'SKIN1004 Madagascar Centella Quick Calming Pad 70 Pads',
+  'price': '৳2,100.00',
+  'category': 'Pad',
+  'brand': 'SKIN1004',
+  'image':
+      'assets/images/SKIN1004 Quick Calming Pad.jpeg',
+  'rating': '★★★★★',
+},
   {
     'name': 'KLAIRS Freshly Juiced Vitamin Drop 35ml',
     'price': '৳2,000.00',
     'category': 'Serum',
-    'brand': 'DEAR KLAIRS',
+    'brand': 'KLAIRS',
     'image':
         'assets/images/KLAIRS Freshly Juiced Vitamin Drop 35ml.jpg',
     'rating': '★★★★★',
   },
+ 
   {
-    'name': 'By Wishtrend Vitamin 75 Maximizing Cream 50ml',
-    'price': '৳2,200.00',
-    'category': 'Moisturizer',
-    'brand': 'BY WISHTREND',
-    'image':
-        'assets/images/By-Wishtrend-Vitamin-75-Maximizing-Cream-1-340x340.jpg',
-    'rating': '★★★★★',
-  },
-  {
-    'name': 'Klairs Rich Moist Soothing Cream 80ml',
+    'name': 'KLAIRS Rich Moist Soothing Cream 80ml',
     'price': '৳2,100.00',
     'category': 'Moisturizer',
-    'brand': 'DEAR KLAIRS',
+    'brand': 'KLAIRS',
     'image':
-        'assets/images/Klairs_Rich-Moist-Soothing-Cream-4.jpg',
+        'assets/images/KLAIRS_Rich-Moist-Soothing-Cream-4.jpg',
     'rating': '★★★★★',
   },
-  {
-    'name':
-        'Beauty of Joseon Matte Sun Stick: Mugwort + Camellia 18g',
-    'price': '৳1,750.00',
-    'category': 'Sun Care',
-    'brand': 'BEAUTY OF JOSEON',
-    'image':
-        'assets/images/Beauty of Joseon Matte sun stick  Mugwort Camelia 18g.webp',
-    'rating': '★★★★★',
-  },
+ 
   {
     'name': 'KLAIRS Freshly Juiced Vitamin E Mask 15ml',
     'price': '৳950.00',
     'category': 'Mask',
-    'brand': 'DEAR KLAIRS',
+    'brand': 'KLAIRS',
     'image':
         'assets/images/KLAIRS Freshly Juiced Vitamin E Mask 15ml.jpg',
     'rating': '★★★★★',
   },
   {
-    'name': 'Klairs Gentle Black Facial Cleanser 140ml',
+    'name': 'AXIS-Y Quinoa One-Step Balanced Gel Cleanser 180ml',
     'price': '৳1,650.00',
     'category': 'Cleanser',
-    'brand': 'DEAR KLAIRS',
+    'brand': 'AXIS-Y',
     'image':
-        'assets/images/Klairs_Gentle-Black-Facial-Cleanser-3.jpg',
+        'assets/images/AXIS-Y Quinoa One-Step Balanced Gel Cleanser 180ml.webp',
     'rating': '★★★★★',
   },
-  {
-    'name': 'By Wishtrend Green Tea & Enzyme Powder Wash 70g',
-    'price': '৳1,800.00',
-    'category': 'Cleanser',
-    'brand': 'BY WISHTREND',
-    'image':
-        'assets/images/BY Wishtrend Green-Tea-Enzyme-Powder-Wash_thumbnail-prodcut-340x340.jpg',
-    'rating': '★★★★★',
-  },
-  {
-    'name': 'By Wishtrend Mandelic Acid 5% Skin Prep Water 120ml',
-    'price': '৳2,050.00',
-    'category': 'Toner',
-    'brand': 'BY WISHTREND',
-    'image': 'assets/images/wishtrend_mandelic_water.jpg',
-    'rating': '★★★★★',
-  },
+  
   {
     'name': 'SKIN1004 Madagascar Centella Ampoule 100ml',
     'price': '৳2,150.00',
     'category': 'Serum',
     'brand': 'SKIN1004',
     'image':
-        'assets/images/skin1004_centella_ampoule.jpg',
+        'assets/images/SKIN1004 Madagascar Centella Ampoule 100m.jpg',
     'rating': '★★★★★',
   },
   {
@@ -165,7 +453,7 @@ const List<Map<String, String>> allProducts = [
     'category': 'Toner',
     'brand': 'SKIN1004',
     'image':
-        'assets/images/skin1004_toning_toner.jpg',
+        'assets/images/SKIN1004-Madagascar-Centella-Toning-Toner-210-ml.jpg',
     'rating': '★★★★★',
   },
   {
@@ -174,9 +462,19 @@ const List<Map<String, String>> allProducts = [
     'category': 'Serum',
     'brand': 'AXIS-Y',
     'image':
-        'assets/images/axis_y_dark_spot_serum.jpg',
+        'assets/images/AXIS-Y Dark Spot Correcting Glow Serum 50ml.jpg',
     'rating': '★★★★★',
   },
+  {
+    'name': 'SKIN1004 Madagascar Centella Light Cleansing Oil 30ml',
+    'price': '700.00',
+    'category': 'Cleanser',
+    'brand': 'SKIN1004',
+    'image':
+        'assets/images/SKIN1004 Madagascar Centella Light Cleansing Oil 30ml(mini).png',
+    'rating': '★★★★★',
+  },
+
   {
     'name':
         'AXIS-Y Artichoke Intensive Skin Barrier Ampoule 30ml',
@@ -184,7 +482,7 @@ const List<Map<String, String>> allProducts = [
     'category': 'Serum',
     'brand': 'AXIS-Y',
     'image':
-        'assets/images/axis_y_artichoke_ampoule.jpg',
+        'assets/images/AXIS-Y Artichoke Intensive Skin Barrier Ampoule 30ml.jpg',
     'rating': '★★★★★',
   },
   {
@@ -194,7 +492,17 @@ const List<Map<String, String>> allProducts = [
     'category': 'Cleanser',
     'brand': 'AXIS-Y',
     'image':
-        'assets/images/axis_y_cleansing_foam.jpg',
+        'assets/images/AXIS-Y Sunday Morning Refreshing Cleansing Foam 120ml.jpeg',
+    'rating': '★★★★★',
+  },
+  {
+    'name':
+        'Skin1004 Madagascar Centella Ampoule Foam 20ml (Mini) ',
+    'price': '৳1,450.00',
+    'category': 'Cleanser',
+    'brand': 'Skin1004',
+    'image':
+        'assets/images/Skin1004-Madagascar-Centella-Ampoule-Foam-20ml(mini).webp',
     'rating': '★★★★★',
   },
   {
@@ -204,7 +512,7 @@ const List<Map<String, String>> allProducts = [
     'category': 'Sun Care',
     'brand': 'AXIS-Y',
     'image':
-        'assets/images/axis_y_physical_sunscreen.jpg',
+        'assets/images/AXIS-Y Complete No-Stress Physical Sunscreen 50ml.webp',
     'rating': '★★★★★',
   },
   {
@@ -214,7 +522,7 @@ const List<Map<String, String>> allProducts = [
     'category': 'Sun Care',
     'brand': 'SKIN1004',
     'image':
-        'assets/images/skin1004_hyalu_cica_sun.jpg',
+        'assets/images/SKIN1004-Madagascar-Centella-Hyalu-Cica-Water-Fit-Sun-Serum-50ml.webp',
     'rating': '★★★★★',
   },
   {
@@ -224,9 +532,10 @@ const List<Map<String, String>> allProducts = [
     'category': 'Cleanser',
     'brand': 'SKIN1004',
     'image':
-        'assets/images/skin1004_cleansing_oil.jpg',
+        'assets/images/SKIN1004 Madagascar Centella Light Cleansing Oil 200ml.jpeg',
     'rating': '★★★★★',
   },
+  
 ];
 
 class CatalogPage extends StatefulWidget {
@@ -323,7 +632,7 @@ List<Map<String, String>> get products => allProducts;
                   const SizedBox(height: 8),
                   const Text(
                     'Find products for your personal skin-care routine.',
-                    style: TextStyle(
+                     style: TextStyle(
                       color: Colors.black54,
                       fontSize: 16,
                     ),

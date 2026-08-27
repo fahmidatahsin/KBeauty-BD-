@@ -471,11 +471,10 @@ Widget _cartButton() {
  Widget _brandFilters() {
   const brands = [
     'ALL',
-    'DEAR KLAIRS',
+    'KLAIRS',
     'SKIN1004',
     'AXIS-Y',
     'BEAUTY OF JOSEON',
-    'BY WISHTREND',
     'BONAJOUR',
   ];
 
