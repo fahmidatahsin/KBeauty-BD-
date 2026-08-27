@@ -496,11 +496,10 @@ const List<Map<String, String>> allProducts = [
     'rating': '★★★★★',
   },
   {
-    'name':
-        'Skin1004 Madagascar Centella Ampoule Foam 20ml (Mini) ',
+    'name':  'Skin1004 Madagascar Centella Ampoule Foam 20ml (Mini) ',
     'price': '৳1,450.00',
     'category': 'Cleanser',
-    'brand': 'Skin1004',
+    'brand': 'SKIN1004',
     'image':
         'assets/images/Skin1004-Madagascar-Centella-Ampoule-Foam-20ml(mini).webp',
     'rating': '★★★★★',
@@ -547,26 +546,52 @@ class CatalogPage extends StatefulWidget {
 
 class _CatalogPageState extends State<CatalogPage> {
   String selectedCategory = 'All';
-  String searchText = '';
+String searchText = '';
+String selectedSort = 'Default';
 
 List<Map<String, String>> get products => allProducts;
 
-  List<Map<String, String>> get filteredProducts {
-    return products
-        .where((product) {
-          final categoryMatches =
-              selectedCategory == 'All' ||
-              product['category'] == selectedCategory;
+List<Map<String, String>> get filteredProducts {
+  final result = products
+      .where((product) {
+        final categoryMatches =
+            selectedCategory == 'All' ||
+            product['category'] == selectedCategory;
 
-          final searchMatches = product['name']!
-              .toLowerCase()
-              .contains(searchText.toLowerCase());
+        final searchMatches = product['name']!
+            .toLowerCase()
+            .contains(searchText.toLowerCase());
 
-          return categoryMatches && searchMatches;
-        })
-        .map((product) => Map<String, String>.from(product))
-        .toList();
+        return categoryMatches && searchMatches;
+      })
+      .map((product) => Map<String, String>.from(product))
+      .toList();
+
+  double getPrice(Map<String, String> product) {
+    final price = product['price'] ?? '';
+
+    if (price == 'SOLD OUT') {
+      return double.infinity;
+    }
+
+    return double.tryParse(
+          price.replaceAll(RegExp(r'[^0-9.]'), ''),
+        ) ??
+        double.infinity;
   }
+
+  if (selectedSort == 'Price: Low to High') {
+    result.sort(
+      (a, b) => getPrice(a).compareTo(getPrice(b)),
+    );
+  } else if (selectedSort == 'Price: High to Low') {
+    result.sort(
+      (a, b) => getPrice(b).compareTo(getPrice(a)),
+    );
+  }
+
+  return result;
+}
 
   void addToCart(Map<String, String> product) {
     if (product['price'] == 'SOLD OUT') {
@@ -758,137 +783,241 @@ List<Map<String, String>> get products => allProducts;
   }
 
   Widget _searchAndFilters(bool isDesktop) {
-    const categories = [
-      'All',
-      'Cleanser',
-      'Moisturizer',
-      'Sun Care',
-      'Serum',
-      'Toner',
-      'Mask',
-      'Pads',
-    ];
+  const categories = [
+    'All',
+    'Cleanser',
+    'Moisturizer',
+    'Sun Care',
+    'Serum',
+    'Toner',
+    'Mask',
+    'Pads',
+  ];
 
-    IconData categoryIcon(String category) {
-      switch (category) {
-        case 'Cleanser':
-          return Icons.water_drop_outlined;
-        case 'Moisturizer':
-          return Icons.spa_outlined;
-        case 'Sun Care':
-          return Icons.wb_sunny_outlined;
-        case 'Serum':
-          return Icons.opacity_outlined;
-        case 'Toner':
-          return Icons.local_drink_outlined;
-        case 'Mask':
-          return Icons.face_retouching_natural;
-        case 'Pads':
-          return Icons.spa_outlined;
-        default:
-          return Icons.grid_view_rounded;
-      }
+  IconData categoryIcon(String category) {
+    switch (category) {
+      case 'Cleanser':
+        return Icons.water_drop_outlined;
+      case 'Moisturizer':
+        return Icons.spa_outlined;
+      case 'Sun Care':
+        return Icons.wb_sunny_outlined;
+      case 'Serum':
+        return Icons.opacity_outlined;
+      case 'Toner':
+        return Icons.local_drink_outlined;
+      case 'Mask':
+        return Icons.face_retouching_natural;
+      case 'Pads':
+        return Icons.spa_outlined;
+      default:
+        return Icons.grid_view_rounded;
     }
+  }
 
-    final searchBox = Container(
-      width: isDesktop ? 360 : double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        onChanged: (value) {
-          setState(() => searchText = value);
-        },
-        decoration: const InputDecoration(
-          hintText: 'Search your skincare...',
-          prefixIcon: Icon(
-            Icons.search,
-            color: Color(0xFF1C6A50),
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 17,
-          ),
+  final searchBox = Container(
+    width: isDesktop ? 360 : double.infinity,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x14000000),
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: TextField(
+      onChanged: (value) {
+        setState(() => searchText = value);
+      },
+      decoration: const InputDecoration(
+        hintText: 'Search your skincare...',
+        prefixIcon: Icon(
+          Icons.search,
+          color: Color(0xFF1C6A50),
+        ),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(
+          vertical: 17,
         ),
       ),
-    );
+    ),
+  );
 
-    final filters = Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: categories.map((category) {
-        final selected = selectedCategory == category;
-
-        return ChoiceChip(
-          showCheckmark: false,
-          selected: selected,
-          selectedColor: const Color(0xFF1C6A50),
-          backgroundColor: Colors.white,
-          elevation: selected ? 3 : 0,
-          pressElevation: 5,
-          side: BorderSide(
-            color: selected
-                ? const Color(0xFF1C6A50)
-                : const Color(0xFFE0E0E0),
+  final sortDropdown = Container(
+    width: isDesktop ? 360 : double.infinity,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x14000000),
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selectedSort,
+        isExpanded: true,
+        icon: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: Color(0xFF1C6A50),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        items: const [
+          DropdownMenuItem(
+            value: 'Default',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.sort,
+                  color: Color(0xFF1C6A50),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Sort By: Default',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                categoryIcon(category),
-                size: 18,
+          DropdownMenuItem(
+            value: 'Price: Low to High',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.arrow_upward,
+                  color: Color(0xFF1C6A50),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Price: Low to High',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownMenuItem(
+            value: 'Price: High to Low',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.arrow_downward,
+                  color: Color(0xFF1C6A50),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Price: High to Low',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        onChanged: (value) {
+          if (value == null) return;
+
+          setState(() {
+            selectedSort = value;
+          });
+        },
+      ),
+    ),
+  );
+
+  final filters = Wrap(
+    spacing: 10,
+    runSpacing: 10,
+    children: categories.map((category) {
+      final selected = selectedCategory == category;
+
+      return ChoiceChip(
+        showCheckmark: false,
+        selected: selected,
+        selectedColor: const Color(0xFF1C6A50),
+        backgroundColor: Colors.white,
+        elevation: selected ? 3 : 0,
+        pressElevation: 5,
+        side: BorderSide(
+          color: selected
+              ? const Color(0xFF1C6A50)
+              : const Color(0xFFE0E0E0),
+        ),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              categoryIcon(category),
+              size: 18,
+              color: selected
+                  ? Colors.white
+                  : const Color(0xFF1C6A50),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              category,
+              style: TextStyle(
                 color: selected
                     ? Colors.white
-                    : const Color(0xFF1C6A50),
+                    : Colors.black87,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(width: 7),
-              Text(
-                category,
-                style: TextStyle(
-                  color: selected
-                      ? Colors.white
-                      : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          onSelected: (_) {
-            setState(() {
-              selectedCategory = category;
-            });
-          },
-        );
-      }).toList(),
-    );
-
-    if (!isDesktop) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          searchBox,
-          const SizedBox(height: 18),
-          filters,
-        ],
+            ),
+          ],
+        ),
+        onSelected: (_) {
+          setState(() {
+            selectedCategory = category;
+          });
+        },
       );
-    }
+    }).toList(),
+  );
 
-    return Row(
+  if (!isDesktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         searchBox,
-        const SizedBox(width: 28),
-        Expanded(child: filters),
+        const SizedBox(height: 12),
+        sortDropdown,
+        const SizedBox(height: 18),
+        filters,
       ],
     );
   }
+
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          searchBox,
+          const SizedBox(height: 12),
+          sortDropdown,
+        ],
+      ),
+      const SizedBox(width: 28),
+      Expanded(
+        child: filters,
+      ),
+    ],
+  );
+}
 }
 
 class HoverProductCard extends StatefulWidget {
