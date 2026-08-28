@@ -47,3 +47,4 @@ app.*.map.json
 /frontend/.dart_tool/
 /frontend/.flutter-plugins
 /frontend/.flutter-plugins-dependencies
+atlas-credentials.env
