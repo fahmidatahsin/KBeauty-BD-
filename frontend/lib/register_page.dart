@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,8 +17,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+  bool isLoading = false;
 
-  void register() {
+  Future<void> register() async {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text;
@@ -45,16 +48,52 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // Backend registration will be connected later.
-    _showMessage('Registration successful!');
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/api/auth/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'fullName': name,
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _showMessage(data['message'] ?? 'Registration successful!');
+
+        Navigator.pop(context, true);
+      } else {
+        _showMessage(data['message'] ?? 'Registration failed.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to connect to the server. '
+        'Make sure the backend is running on port 5000.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -66,32 +105,22 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  InputDecoration fieldDecoration({
-    required String hint,
-    Widget? suffixIcon,
-  }) {
+  InputDecoration fieldDecoration({required String hint, Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hint,
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.85),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(
-          color: Colors.black26,
-        ),
+        borderSide: const BorderSide(color: Colors.black26),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(
-          color: Colors.black26,
-        ),
+        borderSide: const BorderSide(color: Colors.black26),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(
-          color: Color(0xFF1976D2),
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5),
       ),
       suffixIcon: suffixIcon,
     );
@@ -107,15 +136,10 @@ class _RegisterPageState extends State<RegisterPage> {
         fit: StackFit.expand,
         children: [
           // BACKGROUND IMAGE
-          Image.asset(
-            'assets/images/hero-banner-2.jpg',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/hero-banner-2.jpg', fit: BoxFit.cover),
 
           // WHITE TRANSPARENT OVERLAY
-          Container(
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
+          Container(color: Colors.white.withValues(alpha: 0.18)),
 
           // REGISTRATION BOX
           Center(
@@ -171,9 +195,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     TextField(
                       controller: nameController,
-                      decoration: fieldDecoration(
-                        hint: 'Enter your name',
-                      ),
+                      decoration: fieldDecoration(hint: 'Enter your name'),
                     ),
 
                     const SizedBox(height: 18),
@@ -193,9 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: fieldDecoration(
-                        hint: 'Enter your email',
-                      ),
+                      decoration: fieldDecoration(hint: 'Enter your email'),
                     ),
 
                     const SizedBox(height: 18),
@@ -254,8 +274,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
-                              obscureConfirmPassword =
-                                  !obscureConfirmPassword;
+                              obscureConfirmPassword = !obscureConfirmPassword;
                             });
                           },
                           icon: Icon(
@@ -273,7 +292,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: register,
+                        onPressed: isLoading ? null : register,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF087EF5),
                           foregroundColor: Colors.white,
@@ -282,13 +301,22 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        child: const Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
                     ),
 
@@ -300,9 +328,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                       ),
                       child: const Text(
                         'Already have an account? Login',

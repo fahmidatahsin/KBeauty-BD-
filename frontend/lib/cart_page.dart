@@ -114,9 +114,7 @@ class CartPage extends StatelessWidget {
                       ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: 1250,
-                          ),
+                          constraints: const BoxConstraints(maxWidth: 1250),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -148,11 +146,7 @@ class CartPage extends StatelessWidget {
                               // PRODUCTS
                               // =================================================
                               ...cart.items.map(
-                                (item) => _buildCartItem(
-                                  context,
-                                  cart,
-                                  item,
-                                ),
+                                (item) => _buildCartItem(context, cart, item),
                               ),
 
                               const SizedBox(height: 25),
@@ -177,15 +171,10 @@ class CartPage extends StatelessWidget {
                                   onPressed: () {
                                     Navigator.pop(context);
                                   },
-                                  icon: const Icon(
-                                    Icons.arrow_back,
-                                    size: 20,
-                                  ),
+                                  icon: const Icon(Icons.arrow_back, size: 20),
                                   label: const Text(
                                     'Continue Shopping',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    ),
+                                    style: TextStyle(fontSize: 16),
                                   ),
                                 ),
                               ),
@@ -207,20 +196,14 @@ class CartPage extends StatelessWidget {
   // CART ITEM
   // ========================================================================
 
-  Widget _buildCartItem(
-    BuildContext context,
-    CartModel cart,
-    CartItem item,
-  ) {
+  Widget _buildCartItem(BuildContext context, CartModel cart, CartItem item) {
     final product = item.product;
 
     final String image = product['image'] ?? '';
     final String brand = product['brand'] ?? '';
     final String name = product['name'] ?? '';
-    final String unitPrice =
-        '৳${item.unitPrice.toStringAsFixed(2)}';
-    final String itemTotal =
-        '৳${item.totalPrice.toStringAsFixed(2)}';
+    final String unitPrice = '৳${item.unitPrice.toStringAsFixed(2)}';
+    final String itemTotal = '৳${item.totalPrice.toStringAsFixed(2)}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -228,9 +211,7 @@ class CartPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE3E3E3),
-        ),
+        border: Border.all(color: const Color(0xFFE3E3E3)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -331,10 +312,7 @@ class CartPage extends StatelessWidget {
 
               Text(
                 unitPrice,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade700,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
               ),
             ],
           ),
@@ -357,21 +335,15 @@ class CartPage extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                '(${unitPrice} each)',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
+                '($unitPrice each)',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),
             ],
           ),
         ),
 
         // Quantity controls
-        _quantityControls(
-          cart,
-          item,
-        ),
+        _quantityControls(cart, item),
 
         const SizedBox(width: 25),
 
@@ -381,11 +353,7 @@ class CartPage extends StatelessWidget {
             cart.remove(item);
           },
           tooltip: 'Remove item',
-          icon: const Icon(
-            Icons.delete_outline,
-            color: Colors.red,
-            size: 27,
-          ),
+          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 27),
         ),
       ],
     );
@@ -458,10 +426,7 @@ class CartPage extends StatelessWidget {
 
                   Text(
                     unitPrice,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                   ),
                 ],
               ),
@@ -471,10 +436,7 @@ class CartPage extends StatelessWidget {
               onPressed: () {
                 cart.remove(item);
               },
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-              ),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
             ),
           ],
         ),
@@ -486,16 +448,10 @@ class CartPage extends StatelessWidget {
           children: [
             Text(
               itemTotal,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
 
-            _quantityControls(
-              cart,
-              item,
-            ),
+            _quantityControls(cart, item),
           ],
         ),
       ],
@@ -506,16 +462,11 @@ class CartPage extends StatelessWidget {
   // QUANTITY CONTROLS
   // ========================================================================
 
-  Widget _quantityControls(
-    CartModel cart,
-    CartItem item,
-  ) {
+  Widget _quantityControls(CartModel cart, CartItem item) {
     return Container(
       height: 45,
       decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color(0xFFDADADA),
-        ),
+        border: Border.all(color: const Color(0xFFDADADA)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -525,14 +476,8 @@ class CartPage extends StatelessWidget {
               cart.decrease(item);
             },
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 42,
-              minHeight: 44,
-            ),
-            icon: const Icon(
-              Icons.remove,
-              size: 18,
-            ),
+            constraints: const BoxConstraints(minWidth: 42, minHeight: 44),
+            icon: const Icon(Icons.remove, size: 18),
           ),
 
           Container(
@@ -541,17 +486,12 @@ class CartPage extends StatelessWidget {
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               border: Border.symmetric(
-                vertical: BorderSide(
-                  color: Color(0xFFDADADA),
-                ),
+                vertical: BorderSide(color: Color(0xFFDADADA)),
               ),
             ),
             child: Text(
               '${item.quantity}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
 
@@ -560,14 +500,8 @@ class CartPage extends StatelessWidget {
               cart.increase(item);
             },
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 42,
-              minHeight: 44,
-            ),
-            icon: const Icon(
-              Icons.add,
-              size: 18,
-            ),
+            constraints: const BoxConstraints(minWidth: 42, minHeight: 44),
+            icon: const Icon(Icons.add, size: 18),
           ),
         ],
       ),
@@ -586,17 +520,13 @@ class CartPage extends StatelessWidget {
   ) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 930,
-        ),
+        constraints: const BoxConstraints(maxWidth: 930),
         child: Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: const Color(0xFFDCDCDC),
-            ),
+            border: Border.all(color: const Color(0xFFDCDCDC)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,16 +548,11 @@ class CartPage extends StatelessWidget {
                 children: [
                   const Text(
                     'Total Items',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   Text(
                     '${cart.totalItems} items',
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ],
               ),
@@ -640,16 +565,11 @@ class CartPage extends StatelessWidget {
                 children: [
                   const Text(
                     'Subtotal',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   Text(
                     '৳${cart.totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ],
               ),
@@ -663,10 +583,7 @@ class CartPage extends StatelessWidget {
                 children: [
                   const Text(
                     'Shipping',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
 
                   Column(
@@ -674,9 +591,7 @@ class CartPage extends StatelessWidget {
                     children: [
                       Text(
                         '৳${shippingCost.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                        ),
+                        style: const TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 5),
                       Text(
@@ -729,9 +644,7 @@ class CartPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CheckoutPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CheckoutPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -792,10 +705,7 @@ class CartPage extends StatelessWidget {
             Text(
               'Add some products to your cart and they will appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
 
             const SizedBox(height: 25),
@@ -814,9 +724,7 @@ class CartPage extends StatelessWidget {
               ),
               child: const Text(
                 'CONTINUE SHOPPING',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],

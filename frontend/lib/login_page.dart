@@ -43,8 +43,6 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      if (!mounted) return;
-
       if (response.statusCode == 200) {
         final token = data['token'];
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'auth_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -25,10 +26,7 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -42,12 +40,9 @@ class ProfilePage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 700,
-            ),
+            constraints: const BoxConstraints(maxWidth: 700),
             child: Column(
               children: [
-
                 // =================================================
                 // PROFILE CARD
                 // =================================================
@@ -67,7 +62,6 @@ class ProfilePage extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-
                       // PROFILE ICON
                       const CircleAvatar(
                         radius: 48,
@@ -93,10 +87,7 @@ class ProfilePage extends StatelessWidget {
 
                       const Text(
                         'Manage your account information',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.black54,
-                        ),
+                        style: TextStyle(fontSize: 15, color: Colors.black54),
                       ),
 
                       const SizedBox(height: 30),
@@ -136,27 +127,20 @@ class ProfilePage extends StatelessWidget {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text(
-                                  'Edit profile coming soon.',
-                                ),
+                                content: Text('Edit profile coming soon.'),
                               ),
                             );
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                                const Color(0xFF1C6A50),
-                            side: const BorderSide(
-                              color: Color(0xFF1C6A50),
-                            ),
+                            foregroundColor: const Color(0xFF1C6A50),
+                            side: const BorderSide(color: Color(0xFF1C6A50)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
                           child: const Text(
                             'EDIT PROFILE',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -184,7 +168,6 @@ class ProfilePage extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-
                       _profileOption(
                         context,
                         icon: Icons.shopping_bag_outlined,
@@ -192,9 +175,7 @@ class ProfilePage extends StatelessWidget {
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                'Orders page coming soon.',
-                              ),
+                              content: Text('Orders page coming soon.'),
                             ),
                           );
                         },
@@ -209,9 +190,7 @@ class ProfilePage extends StatelessWidget {
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                'Wishlist coming soon.',
-                              ),
+                              content: Text('Wishlist coming soon.'),
                             ),
                           );
                         },
@@ -226,9 +205,7 @@ class ProfilePage extends StatelessWidget {
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                'Address management coming soon.',
-                              ),
+                              content: Text('Address management coming soon.'),
                             ),
                           );
                         },
@@ -276,11 +253,7 @@ class ProfilePage extends StatelessWidget {
         children: [
           const SizedBox(width: 2),
 
-          Icon(
-            icon,
-            color: const Color(0xFF1C6A50),
-            size: 25,
-          ),
+          Icon(icon, color: const Color(0xFF1C6A50), size: 25),
 
           const SizedBox(width: 15),
 
@@ -326,24 +299,17 @@ class ProfilePage extends StatelessWidget {
     bool isLogout = false,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 6,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: Icon(
         icon,
-        color: isLogout
-            ? Colors.red.shade700
-            : const Color(0xFF1C6A50),
+        color: isLogout ? Colors.red.shade700 : const Color(0xFF1C6A50),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: isLogout
-              ? Colors.red.shade700
-              : Colors.black87,
+          color: isLogout ? Colors.red.shade700 : Colors.black87,
         ),
       ),
       trailing: isLogout
@@ -368,13 +334,9 @@ class ProfilePage extends StatelessWidget {
         return AlertDialog(
           title: const Text(
             'Logout',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: const Text(
-            'Are you sure you want to logout?',
-          ),
+          content: const Text('Are you sure you want to logout?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -384,11 +346,24 @@ class ProfilePage extends StatelessWidget {
             ),
 
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
+                // Close confirmation dialog
                 Navigator.pop(dialogContext);
 
-                // Return to HomePage and tell it
-                // that the user has logged out.
+                // Remove saved login token
+                await AuthService.logout();
+
+                if (!context.mounted) return;
+
+                // Show logout message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Logout successful!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+
+                // Go back and tell previous page that logout happened
                 Navigator.pop(context, false);
               },
               style: FilledButton.styleFrom(
