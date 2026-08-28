@@ -1,26 +1,34 @@
 
-
 const express = require("express");
+
 const router = express.Router();
 
 const {
   registerUser,
   loginUser,
+  getProfile,
+  updateProfile,
 } = require("../controllers/authController");
 
-// 👉 middleware import কর
 const { protect } = require("../middleware/authMiddleware");
 
-// ✅ routes
+
+// ============================================================
+// PUBLIC AUTH ROUTES
+// ============================================================
+
 router.post("/register", registerUser);
+
 router.post("/login", loginUser);
 
-// 🔐 protected route
-router.get("/profile", protect, (req, res) => {
-  res.json({
-    message: "Profile data",
-    user: req.user,
-  });
-});
+
+// ============================================================
+// PROTECTED PROFILE ROUTES
+// ============================================================
+
+router.get("/profile", protect, getProfile);
+
+router.put("/profile", protect, updateProfile);
+
 
 module.exports = router;
