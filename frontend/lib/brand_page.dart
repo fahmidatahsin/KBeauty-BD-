@@ -21,22 +21,66 @@ class BrandPage extends StatefulWidget {
 class _BrandPageState extends State<BrandPage> {
   String searchText = '';
   String selectedCategory = 'All';
+  String selectedSort = 'Default';
 
-  List<Map<String, String>> get brandProducts {
-    return widget.products.where((product) {
-      final brandMatches = product['brand'] == widget.brand;
+ List<Map<String, String>> get brandProducts {
+  final result = widget.products.where((product) {
+    final brandMatches = product['brand'] == widget.brand;
 
-      final categoryMatches =
-          selectedCategory == 'All' ||
-          product['category'] == selectedCategory;
+    final categoryMatches =
+        selectedCategory == 'All' ||
+        product['category'] == selectedCategory;
 
-      final searchMatches = product['name']!
-          .toLowerCase()
-          .contains(searchText.toLowerCase());
+    final searchMatches = product['name']!
+        .toLowerCase()
+        .contains(searchText.toLowerCase());
 
-      return brandMatches && categoryMatches && searchMatches;
-    }).toList();
+    return brandMatches && categoryMatches && searchMatches;
+  }).toList();
+
+  // Sort products by price
+  if (selectedSort == 'Price: Low to High') {
+    result.sort((a, b) {
+      final priceA = double.tryParse(
+            a['price']!
+                .replaceAll('৳', '')
+                .replaceAll(',', ''),
+          ) ??
+          double.infinity;
+
+      final priceB = double.tryParse(
+            b['price']!
+                .replaceAll('৳', '')
+                .replaceAll(',', ''),
+          ) ??
+          double.infinity;
+
+      return priceA.compareTo(priceB);
+    });
   }
+
+  if (selectedSort == 'Price: High to Low') {
+    result.sort((a, b) {
+      final priceA = double.tryParse(
+            a['price']!
+                .replaceAll('৳', '')
+                .replaceAll(',', ''),
+          ) ??
+          double.infinity;
+
+      final priceB = double.tryParse(
+            b['price']!
+                .replaceAll('৳', '')
+                .replaceAll(',', ''),
+          ) ??
+          double.infinity;
+
+      return priceB.compareTo(priceA);
+    });
+  }
+
+  return result;
+}
 
   List<String> get categories {
     final categorySet = <String>{'All'};
@@ -283,6 +327,92 @@ class _BrandPageState extends State<BrandPage> {
         ),
       ),
     );
+    final sortDropdown = Container(
+  width: isDesktop ? 360 : double.infinity,
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(14),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x14000000),
+        blurRadius: 12,
+        offset: Offset(0, 4),
+      ),
+    ],
+  ),
+ child: DropdownButtonFormField<String>(
+  value: selectedSort,
+  decoration: const InputDecoration(
+    prefixIcon: Icon(
+      Icons.sort,
+      color: Color(0xFF1C6A50),
+    ),
+    border: InputBorder.none,
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 4,
+    ),
+  ),
+  selectedItemBuilder: (context) {
+    return const [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Sort By: Default',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Sort By: Price: Low to High',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Sort By: Price: High to Low',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    ];
+  },
+  items: const [
+    DropdownMenuItem(
+      value: 'Default',
+      child: Text('Default'),
+    ),
+    DropdownMenuItem(
+      value: 'Price: Low to High',
+      child: Text('Price: Low to High'),
+    ),
+    DropdownMenuItem(
+      value: 'Price: High to Low',
+      child: Text('Price: High to Low'),
+    ),
+  ],
+  onChanged: (value) {
+    if (value == null) return;
+
+    setState(() {
+      selectedSort = value;
+    });
+  },
+),
+);
 
     final filters = Wrap(
       spacing: 10,
@@ -320,26 +450,45 @@ class _BrandPageState extends State<BrandPage> {
       }).toList(),
     );
 
-    if (!isDesktop) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+ if (!isDesktop) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      searchBox,
+      const SizedBox(height: 18),
+      sortDropdown,
+      const SizedBox(height: 18),
+      filters,
+    ],
+  );
+}
+
+return Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    // LEFT SIDE: Search + Sort
+    SizedBox(
+      width: 450,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           searchBox,
-          const SizedBox(height: 18),
-          filters,
+          const SizedBox(height: 14),
+          sortDropdown,
         ],
-      );
-    }
+      ),
+    ),
 
-    return Row(
-      children: [
-        searchBox,
-        const SizedBox(width: 28),
-        Expanded(
-          child: filters,
-        ),
-      ],
-    );
+    const SizedBox(width: 34),
+
+    // RIGHT SIDE: Category filters
+    Expanded(
+      child: filters,
+    ),
+  ],
+);
+
+ 
   }
 }
 
