@@ -7,6 +7,7 @@ import 'product_detail_page.dart';
 import 'login_page.dart';
 import 'profile_page.dart';
 import 'auth_service.dart';
+import 'brand_service.dart';
 
 final CartModel appCart = CartModel();
 void main() {
@@ -66,11 +67,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String searchText = '';
   bool isLoggedIn = false;
+  List<String> brands = [];
+bool isLoadingBrands = true;
   @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
+void initState() {
+  super.initState();
+  _checkLoginStatus();
+  _loadBrands();
+}
 
   Future<void> _checkLoginStatus() async {
     final loggedIn = await AuthService.isLoggedIn();
@@ -81,44 +85,24 @@ class _HomePageState extends State<HomePage> {
       isLoggedIn = loggedIn;
     });
   }
+  Future<void> _loadBrands() async {
+  try {
+    final loadedBrands = await BrandService.getBrands();
 
-  final products = const [
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Pad 60 Pads',
-      brand: 'BONAJOUR',
-      price: '৳1,700.00',
-      image: 'assets/images/GinerReliefPad.jpg',
-      rating: '★★★★★',
-      vegan: true,
-      newArrival: true,
-    ),
+    if (!mounted) return;
 
-    Product(
-      name: 'Bonajour Jeju Milk Soft Foaming Cleanser 160ml',
-      brand: 'BONAJOUR',
-      price: '৳1,700.00',
-      image: 'assets/images/boanjourFoamingCleanser.webp',
-      rating: '★★★★★',
-    ),
+    setState(() {
+      brands = loadedBrands;
+      isLoadingBrands = false;
+    });
+  } catch (error) {
+    if (!mounted) return;
 
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Sun Cream 40ml',
-      brand: 'BONAJOUR',
-      price: '৳1,700.00',
-      image: 'assets/images/bonajourGingercream.png',
-      rating: '★★★★★',
-    ),
-
-    Product(
-      name: 'Bonajour Ginger Aqua Relief Foam Cleanser',
-      brand: 'BONAJOUR',
-      price: 'SOLD OUT',
-      image: 'assets/images/Bonajour Ginger Aqua Relief Foam Cleanser.jpg',
-      rating: '★★★★☆',
-      soldOut: true,
-      newArrival: true,
-    ),
-  ];
+    setState(() {
+      isLoadingBrands = false;
+    });
+  }
+}
 
   Future<bool> openLoginPage() async {
     final result = await Navigator.push(
@@ -138,9 +122,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Product> get visibleProducts {
-    if (searchText.trim().isEmpty) {
-      return products;
-    }
+  if (searchText.trim().isEmpty) {
+    return [];
+  }
 
     final query = searchText.trim().toLowerCase();
 
@@ -475,55 +459,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _brandFilters() {
-    const brands = [
-      'ALL',
-      'DEAR KLAIRS',
-      'SKIN1004',
-      'AXIS-Y',
-      'BEAUTY OF JOSEON',
-      'BY WISHTREND',
-      'BONAJOUR',
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 12,
-        runSpacing: 8,
-        children: brands.map((brand) {
-          return TextButton(
-            onPressed: () {
-              if (brand == 'ALL') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CatalogPage()),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        BrandPage(brand: brand, products: allProducts),
-                  ),
-                );
-              }
-            },
-            child: Text(
-              brand,
-              style: TextStyle(
-                color: Colors.blue.shade800,
-                decoration: TextDecoration.underline,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          );
-        }).toList(),
+ Widget _brandFilters() {
+  if (isLoadingBrands) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
+
+  final allBrands = ['ALL', ...brands];
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+    child: Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 12,
+      runSpacing: 8,
+      children: allBrands.map((brand) {
+        return TextButton(
+          onPressed: () {
+            if (brand == 'ALL') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CatalogPage(),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BrandPage(
+                    brand: brand,
+                    products: allProducts,
+                  ),
+                ),
+              );
+            }
+          },
+          child: Text(
+            brand.toUpperCase(),
+            style: TextStyle(
+              color: Colors.blue.shade800,
+              decoration: TextDecoration.underline,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        );
+      }).toList(),
+    ),
+  );
+}
 
   Widget _productSection(double width) {
     final isMobile = width < 650;

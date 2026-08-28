@@ -393,7 +393,7 @@ const List<Map<String, String>> allProducts = [
   'name':
       'SKIN1004 Madagascar Centella Quick Calming Pad 70 Pads',
   'price': '৳2,100.00',
-  'category': 'Pad',
+  'category': 'Pads',
   'brand': 'SKIN1004',
   'image':
       'assets/images/SKIN1004 Quick Calming Pad.jpeg',

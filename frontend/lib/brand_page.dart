@@ -25,7 +25,8 @@ class _BrandPageState extends State<BrandPage> {
 
  List<Map<String, String>> get brandProducts {
   final result = widget.products.where((product) {
-    final brandMatches = product['brand'] == widget.brand;
+    final brandMatches =
+    product['brand']?.toLowerCase() == widget.brand.toLowerCase();
 
     final categoryMatches =
         selectedCategory == 'All' ||
