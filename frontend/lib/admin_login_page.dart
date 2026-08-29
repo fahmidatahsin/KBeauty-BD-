@@ -61,7 +61,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   ),
 );
 
-      Navigator.pop(context, true);
+      
     } else {
       _showMessage(
         data['message'] ?? 'Invalid admin email or password.',

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Brand = require("../models/Brand");
 
 const products = [
   {
@@ -297,7 +298,7 @@ const products = [
     name: "SKIN1004 Madagascar Centella Tone Brightening Boosting Toner 210ml",
     price: 1950,
     category: "Toner",
-    brand: "SKIN1004",
+   brand: "SKIN1004",
     image:
       "assets/images/SKIN1004 Boosting Toner.jpeg",
     rating: 5,
@@ -449,7 +450,7 @@ const products = [
     name: "Skin1004 Madagascar Centella Ampoule Foam 20ml (Mini)",
     price: 1450,
     category: "Cleanser",
-    brand: "Skin1004",
+    brand: "SKIN1004",
     image:
       "assets/images/Skin1004-Madagascar-Centella-Ampoule-Foam-20ml(mini).webp",
     rating: 5,
@@ -476,7 +477,7 @@ const products = [
     name: "SKIN1004 Madagascar Centella Light Cleansing Oil 200ml",
     price: 2250,
     category: "Cleanser",
-    brand: "SKIN1004",
+   brand: "SKIN1004",
     image:
       "assets/images/SKIN1004 Madagascar Centella Light Cleansing Oil 200ml.jpeg",
     rating: 5,
@@ -507,18 +508,27 @@ const seedProducts = async () => {
     console.log("MongoDB connected successfully.");
 
     const categories = await Category.find();
+    const brands = await Brand.find();
 
     const categoryMap = {};
+    const brandMap = {};
 
     categories.forEach((category) => {
       categoryMap[category.name] = category._id;
     });
+    brands.forEach((brand) => {
+  brandMap[brand.name.toUpperCase()] = brand._id;
+});
 
     console.log(
       "Available categories:",
       Object.keys(categoryMap)
     );
 
+  console.log(
+  "Available brands:",
+  Object.keys(brandMap)
+);  
     const productsToInsert = products.map((product) => {
       const categoryId = categoryMap[product.category];
 
@@ -528,10 +538,18 @@ const seedProducts = async () => {
         );
       }
 
-      return {
-        name: product.name,
-        brand: product.brand,
-        category: categoryId,
+
+
+if (!brandId) {
+  throw new Error(
+    `Brand not found: ${product.brand}`
+  );
+}
+
+return {
+  name: product.name,
+  brand: brandId,
+  category: categoryId,
         price: product.price,
         description: getDescription(
           product.category,

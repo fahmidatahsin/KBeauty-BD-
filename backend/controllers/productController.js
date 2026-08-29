@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Brand = require("../models/Brand");
 
 // ===============================
 // ADD PRODUCT
@@ -24,6 +25,13 @@ const addProduct = async (req, res) => {
                 message: "Category not found",
             });
         }
+        const existingBrand = await Brand.findById(brand);
+
+if (!existingBrand) {
+    return res.status(404).json({
+        message: "Brand not found",
+    });
+}
 
         // Create product
         const product = new Product({
@@ -62,9 +70,8 @@ const getAllProducts = async (req, res) => {
         const sort = req.query.sort;
 
         const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-
+const limit = req.query.limit ? Number(req.query.limit) : null;
+const skip = limit ? (page - 1) * limit : 0;
         // Search query
         const searchQuery = keyword
             ? {
@@ -93,11 +100,14 @@ const getAllProducts = async (req, res) => {
             }
         }
 
-        // Product query
-        let query = Product.find(searchQuery)
-            .populate("category")
-            .skip(skip)
-            .limit(limit);
+       let query = Product.find(searchQuery)
+    .populate("category")
+    .populate("brand")
+    .skip(skip);
+
+if (limit) {
+    query = query.limit(limit);
+}
 
         // Sorting
         if (sort === "price_asc") {
@@ -117,11 +127,13 @@ const getAllProducts = async (req, res) => {
         const products = await query;
 
         res.status(200).json({
-            products,
-            currentPage: page,
-            totalPages: Math.ceil(totalProducts / limit),
-            totalProducts,
-        });
+    products,
+    currentPage: page,
+    totalPages: limit
+        ? Math.ceil(totalProducts / limit)
+        : 1,
+    totalProducts,
+});
     } catch (error) {
         res.status(500).json({
             message: error.message,
@@ -137,8 +149,9 @@ const getSingleProduct = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const product = await Product.findById(id)
-            .populate("category");
+       const product = await Product.findById(id)
+    .populate("category")
+    .populate("brand");
 
         if (!product) {
             return res.status(404).json({
@@ -189,9 +202,25 @@ const updateProduct = async (req, res) => {
                     message: "Category not found",
                 });
             }
+            const existingBrand = await Brand.findById(brand);
+ 
+
 
             product.category = category;
         }
+
+        // Check brand
+if (brand) {
+    const existingBrand = await Brand.findById(brand);
+
+    if (!existingBrand) {
+        return res.status(404).json({
+            message: "Brand not found",
+        });
+    }
+
+    
+}
 
         product.name = name;
         product.brand = brand;

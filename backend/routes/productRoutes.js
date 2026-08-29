@@ -13,11 +13,11 @@ const {
   deleteProduct,
 } = require("../controllers/productController");
 
-// 👥 Public routes
+// Public routes
 router.get("/", getAllProducts);
 router.get("/:id", getSingleProduct);
 
-// 🔐 Admin-only routes
+//  Admin-only routes
 router.post("/", protect, adminMiddleware, addProduct);
 
 router.put("/:id", protect, adminMiddleware, updateProduct);

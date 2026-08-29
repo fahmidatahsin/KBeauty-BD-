@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const {
+  getDashboardStats,
   getAllUsers,
   deleteUser,
   getAllProducts,
@@ -10,11 +11,16 @@ const {
   getAllOrders,
   updateOrderStatus,
 } = require("../controllers/adminController");
-
 const { protect } = require("../middleware/authMiddleware");
 
 const adminMiddleware = require("../middleware/adminMiddleware");
 
+router.get(
+  "/dashboard",
+  protect,
+  adminMiddleware,
+  getDashboardStats
+);
 router.get("/users", protect, adminMiddleware, getAllUsers);
 router.delete("/users/:id", protect, adminMiddleware, deleteUser);
 

@@ -46,6 +46,46 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+// =========================
+// 📊 ADMIN DASHBOARD STATS
+// =========================
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalProducts = await Product.countDocuments();
+    const totalUsers = await User.countDocuments();
+
+    const salesResult = await Order.aggregate([
+      {
+        $match: {
+          paymentStatus: "Paid",
+          status: { $ne: "Cancelled" },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+
+    const totalSales =
+      salesResult.length > 0
+        ? salesResult[0].totalSales
+        : 0;
+
+    res.status(200).json({
+      totalProducts,
+      totalUsers,
+      totalSales,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 // =========================
 // 📦 MANAGE PRODUCTS
@@ -54,7 +94,9 @@ exports.deleteUser = async (req, res) => {
 // Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("category");
+    const products = await Product.find()
+  .populate("brand")
+  .populate("category");
 
     res.status(200).json({
       products,
