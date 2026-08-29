@@ -342,7 +342,7 @@ class _BrandPageState extends State<BrandPage> {
     ],
   ),
  child: DropdownButtonFormField<String>(
-  value: selectedSort,
+  initialValue: selectedSort,
   decoration: const InputDecoration(
     prefixIcon: Icon(
       Icons.sort,
