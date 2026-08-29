@@ -16,10 +16,6 @@ class ProductService {
 
     final decoded = jsonDecode(response.body);
 
-    // ===============================
-    // CHECK API RESPONSE
-    // ===============================
-
     if (decoded is! Map<String, dynamic>) {
       throw Exception('Invalid products API response');
     }
@@ -30,44 +26,54 @@ class ProductService {
       throw Exception('Products data is not a list');
     }
 
-    // ===============================
-    // CONVERT PRODUCTS
-    // ===============================
-
     return productsData
         .map<Map<String, String>>((product) {
           if (product is! Map) {
             return <String, String>{};
           }
 
-          // -------------------------------
-          // CATEGORY SAFE HANDLING
-          // -------------------------------
+          // ===============================
+          // CATEGORY
+          // ===============================
 
           String categoryName = '';
 
           final category = product['category'];
 
           if (category is Map) {
-            categoryName = category['name']?.toString() ?? '';
+            categoryName = category['name']?.toString().trim() ?? '';
           } else if (category != null) {
-            categoryName = category.toString();
+            categoryName = category.toString().trim();
           }
 
-          // -------------------------------
+          // ===============================
+          // BRAND
+          // ===============================
+
+          String brandName = '';
+
+          final brand = product['brand'];
+
+          if (brand is Map) {
+            brandName = brand['name']?.toString().trim() ?? '';
+          } else if (brand != null) {
+            brandName = brand.toString().trim();
+          }
+
+          // ===============================
           // IMAGE
-          // -------------------------------
+          // ===============================
 
-          final image = product['image']?.toString() ?? '';
+          final image = product['image']?.toString().trim() ?? '';
 
-          // -------------------------------
+          // ===============================
           // RETURN PRODUCT
-          // -------------------------------
+          // ===============================
 
           return {
             'id': product['_id']?.toString() ?? '',
             'name': product['name']?.toString() ?? '',
-            'brand': product['brand']['name'].toString(),
+            'brand': brandName,
             'category': categoryName,
             'price': product['price']?.toString() ?? '0',
             'description': product['description']?.toString() ?? '',
@@ -75,14 +81,11 @@ class ProductService {
             'stock': product['stock']?.toString() ?? '0',
             'rating': product['rating']?.toString() ?? '0',
             'numReviews': product['numReviews']?.toString() ?? '0',
-
-            // These may or may not exist in backend
             'vegan': product['vegan']?.toString() ?? 'false',
             'newArrival': product['newArrival']?.toString() ?? 'false',
           };
         })
         .where((product) {
-          // Empty/invalid products বাদ দিচ্ছি
           return product['id'] != null && product['id']!.isNotEmpty;
         })
         .toList();

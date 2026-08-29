@@ -11,10 +11,15 @@ const {
   getAllOrders,
   updateOrderStatus,
 } = require("../controllers/adminController");
-const { protect } = require("../middleware/authMiddleware");
 
+const { protect } = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
+
 const { updateProduct } = require("../controllers/productController");
+
+// ============================================================
+// 📊 ADMIN DASHBOARD
+// ============================================================
 
 router.get(
   "/dashboard",
@@ -22,14 +27,60 @@ router.get(
   adminMiddleware,
   getDashboardStats
 );
-router.get("/users", protect, adminMiddleware, getAllUsers);
-router.delete("/users/:id", protect, adminMiddleware, deleteUser);
 
-router.get("/products", protect, adminMiddleware, getAllProducts);
-router.put("/products/:id", protect, adminMiddleware, updateProduct);
-router.delete("/products/:id", protect, adminMiddleware, deleteProduct);
+// ============================================================
+// 👥 USERS
+// ============================================================
 
-router.get("/orders", protect, adminMiddleware, getAllOrders);
+router.get(
+  "/users",
+  protect,
+  adminMiddleware,
+  getAllUsers
+);
+
+router.delete(
+  "/users/:id",
+  protect,
+  adminMiddleware,
+  deleteUser
+);
+
+// ============================================================
+// 📦 PRODUCTS
+// ============================================================
+
+router.get(
+  "/products",
+  protect,
+  adminMiddleware,
+  getAllProducts
+);
+
+router.put(
+  "/products/:id",
+  protect,
+  adminMiddleware,
+  updateProduct
+);
+
+router.delete(
+  "/products/:id",
+  protect,
+  adminMiddleware,
+  deleteProduct
+);
+
+// ============================================================
+// 🛒 ORDERS
+// ============================================================
+
+router.get(
+  "/orders",
+  protect,
+  adminMiddleware,
+  getAllOrders
+);
 
 router.put(
   "/orders/:id",

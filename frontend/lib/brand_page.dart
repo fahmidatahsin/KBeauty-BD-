@@ -8,11 +8,7 @@ class BrandPage extends StatefulWidget {
   final String brand;
   final List<Map<String, String>> products;
 
-  const BrandPage({
-    super.key,
-    required this.brand,
-    required this.products,
-  });
+  const BrandPage({super.key, required this.brand, required this.products});
 
   @override
   State<BrandPage> createState() => _BrandPageState();
@@ -23,96 +19,144 @@ class _BrandPageState extends State<BrandPage> {
   String selectedCategory = 'All';
   String selectedSort = 'Default';
 
- List<Map<String, String>> get brandProducts {
-  final result = widget.products.where((product) {
-    final brandMatches =
-    product['brand']?.toLowerCase() == widget.brand.toLowerCase();
+  // ======================================================
+  // BRAND PRODUCTS
+  // ======================================================
 
-  final categoryMatches =
-    selectedCategory == 'All' ||
-    product['category']?.toLowerCase() ==
-        selectedCategory.toLowerCase();
+  List<Map<String, String>> get brandProducts {
+    final currentBrand = widget.brand.trim().toLowerCase();
+    final currentSearch = searchText.trim().toLowerCase();
 
-    final searchMatches = product['name']!
-        .toLowerCase()
-        .contains(searchText.toLowerCase());
+    final result = widget.products
+        .where((product) {
+          final productBrand = (product['brand'] ?? '').trim().toLowerCase();
 
-    return brandMatches && categoryMatches && searchMatches;
-  }).toList();
+          final productCategory = (product['category'] ?? '')
+              .trim()
+              .toLowerCase();
 
-  // Sort products by price
-  if (selectedSort == 'Price: Low to High') {
-    result.sort((a, b) {
-      final priceA = double.tryParse(
-            a['price']!
-                .replaceAll('৳', '')
-                .replaceAll(',', ''),
-          ) ??
-          double.infinity;
+          final selectedCat = selectedCategory.trim().toLowerCase();
 
-      final priceB = double.tryParse(
-            b['price']!
-                .replaceAll('৳', '')
-                .replaceAll(',', ''),
-          ) ??
-          double.infinity;
+          final productName = (product['name'] ?? '').trim().toLowerCase();
 
-      return priceA.compareTo(priceB);
-    });
+          // Brand match
+          final brandMatches = productBrand == currentBrand;
+
+          // Category match
+          final categoryMatches =
+              selectedCategory == 'All' || productCategory == selectedCat;
+
+          // Search match
+          final searchMatches = productName.contains(currentSearch);
+
+          return brandMatches && categoryMatches && searchMatches;
+        })
+        .map((product) {
+          return Map<String, String>.from(product);
+        })
+        .toList();
+
+    // ======================================================
+    // SORT PRODUCTS BY PRICE
+    // ======================================================
+
+    if (selectedSort == 'Price: Low to High') {
+      result.sort((a, b) {
+        final priceA =
+            double.tryParse(
+              (a['price'] ?? '').replaceAll('৳', '').replaceAll(',', '').trim(),
+            ) ??
+            double.infinity;
+
+        final priceB =
+            double.tryParse(
+              (b['price'] ?? '').replaceAll('৳', '').replaceAll(',', '').trim(),
+            ) ??
+            double.infinity;
+
+        return priceA.compareTo(priceB);
+      });
+    }
+
+    if (selectedSort == 'Price: High to Low') {
+      result.sort((a, b) {
+        final priceA =
+            double.tryParse(
+              (a['price'] ?? '').replaceAll('৳', '').replaceAll(',', '').trim(),
+            ) ??
+            double.infinity;
+
+        final priceB =
+            double.tryParse(
+              (b['price'] ?? '').replaceAll('৳', '').replaceAll(',', '').trim(),
+            ) ??
+            double.infinity;
+
+        return priceB.compareTo(priceA);
+      });
+    }
+
+    return result;
   }
 
-  if (selectedSort == 'Price: High to Low') {
-    result.sort((a, b) {
-      final priceA = double.tryParse(
-            a['price']!
-                .replaceAll('৳', '')
-                .replaceAll(',', ''),
-          ) ??
-          double.infinity;
-
-      final priceB = double.tryParse(
-            b['price']!
-                .replaceAll('৳', '')
-                .replaceAll(',', ''),
-          ) ??
-          double.infinity;
-
-      return priceB.compareTo(priceA);
-    });
-  }
-
-  return result;
-}
+  // ======================================================
+  // CATEGORY LIST
+  // ======================================================
 
   List<String> get categories {
-  final categorySet = <String>{'All'};
+    const allCategories = [
+      'All',
+      'Cleanser',
+      'Moisturizer',
+      'Sun Care',
+      'Serum',
+      'Toner',
+      'Mask',
+      'Pads',
+    ];
 
-  for (final product in widget.products) {
-    final productBrand =
-        product['brand']?.trim().toLowerCase();
+    final currentBrand = widget.brand.trim().toLowerCase();
 
-    final currentBrand =
-        widget.brand.trim().toLowerCase();
+    final brandCategoryNames = <String>{};
 
-    final category =
-        product['category']?.trim();
+    // Find categories that actually belong
+    // to the currently selected brand.
+    for (final product in widget.products) {
+      final productBrand = (product['brand'] ?? '').trim().toLowerCase();
 
-    if (productBrand == currentBrand &&
-        category != null &&
-        category.isNotEmpty) {
-      categorySet.add(category);
+      if (productBrand == currentBrand) {
+        final category = (product['category'] ?? '').trim().toLowerCase();
+
+        if (category.isNotEmpty) {
+          brandCategoryNames.add(category);
+        }
+      }
     }
+
+    // Always show All
+    final result = <String>['All'];
+
+    // Add only categories that exist
+    // for this particular brand.
+    for (final category in allCategories.skip(1)) {
+      if (brandCategoryNames.contains(category.trim().toLowerCase())) {
+        result.add(category);
+      }
+    }
+
+    return result;
   }
 
-  return categorySet.toList();
-}
+  // ======================================================
+  // ADD TO CART
+  // ======================================================
 
   void addToCart(Map<String, String> product) {
-    if (product['price'] == 'SOLD OUT') {
+    final stock = int.tryParse(product['stock'] ?? '0') ?? 0;
+
+    if (stock <= 0 || product['price'] == 'SOLD OUT') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sorry, this product is sold out.'),
-        ),
+        const SnackBar(content: Text('Sorry, this product is sold out.')),
       );
       return;
     }
@@ -120,30 +164,36 @@ class _BrandPageState extends State<BrandPage> {
     CartScope.of(context).add(product, 1);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product['name']} added to cart.'),
-      ),
+      SnackBar(content: Text('${product['name']} added to cart.')),
     );
   }
+
+  // ======================================================
+  // OPEN PRODUCT DETAILS
+  // ======================================================
 
   void openDetails(Map<String, String> product) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ProductDetailPage(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => ProductDetailPage(product: product)),
     );
   }
+
+  // ======================================================
+  // BUILD
+  // ======================================================
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+
     final isDesktop = width >= 800;
+
     final columns = width >= 1150
         ? 4
         : width >= 750
-            ? 3
-            : 2;
+        ? 3
+        : 2;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F7),
@@ -151,6 +201,7 @@ class _BrandPageState extends State<BrandPage> {
         child: Column(
           children: [
             _header(isDesktop),
+
             Expanded(
               child: ListView(
                 padding: EdgeInsets.symmetric(
@@ -173,10 +224,7 @@ class _BrandPageState extends State<BrandPage> {
                   Text(
                     '${brandProducts.length} products available',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.black54, fontSize: 16),
                   ),
 
                   const SizedBox(height: 28),
@@ -200,13 +248,11 @@ class _BrandPageState extends State<BrandPage> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: brandProducts.length,
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columns,
                         crossAxisSpacing: 24,
                         mainAxisSpacing: 28,
-                        childAspectRatio:
-                            width < 600 ? 0.52 : 0.60,
+                        childAspectRatio: width < 600 ? 0.52 : 0.60,
                       ),
                       itemBuilder: (context, index) {
                         final product = brandProducts[index];
@@ -227,6 +273,10 @@ class _BrandPageState extends State<BrandPage> {
     );
   }
 
+  // ======================================================
+  // HEADER
+  // ======================================================
+
   Widget _header(bool isDesktop) {
     final cart = CartScope.of(context);
 
@@ -240,10 +290,7 @@ class _BrandPageState extends State<BrandPage> {
         children: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back,
-              size: 18,
-            ),
+            icon: const Icon(Icons.arrow_back, size: 18),
             label: const Text(
               'BACK',
               style: TextStyle(
@@ -273,14 +320,10 @@ class _BrandPageState extends State<BrandPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const CartPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const CartPage()),
                   );
                 },
-                icon: const Icon(
-                  Icons.shopping_bag_outlined,
-                ),
+                icon: const Icon(Icons.shopping_bag_outlined),
               ),
 
               if (cart.totalItems > 0)
@@ -292,10 +335,7 @@ class _BrandPageState extends State<BrandPage> {
                     backgroundColor: Colors.deepOrange,
                     child: Text(
                       '${cart.totalItems}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
                     ),
                   ),
                 ),
@@ -306,7 +346,15 @@ class _BrandPageState extends State<BrandPage> {
     );
   }
 
+  // ======================================================
+  // SEARCH + SORT + CATEGORY FILTER
+  // ======================================================
+
   Widget _searchAndFilters(bool isDesktop) {
+    // ======================================================
+    // SEARCH BOX
+    // ======================================================
+
     final searchBox = Container(
       width: isDesktop ? 360 : double.infinity,
       decoration: BoxDecoration(
@@ -328,103 +376,98 @@ class _BrandPageState extends State<BrandPage> {
         },
         decoration: const InputDecoration(
           hintText: 'Search this brand...',
-          prefixIcon: Icon(
-            Icons.search,
-            color: Color(0xFF1C6A50),
-          ),
+          prefixIcon: Icon(Icons.search, color: Color(0xFF1C6A50)),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 17,
-          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 17),
         ),
       ),
     );
-    final sortDropdown = Container(
-  width: isDesktop ? 360 : double.infinity,
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(14),
-    boxShadow: const [
-      BoxShadow(
-        color: Color(0x14000000),
-        blurRadius: 12,
-        offset: Offset(0, 4),
-      ),
-    ],
-  ),
- child: DropdownButtonFormField<String>(
-  initialValue: selectedSort,
-  decoration: const InputDecoration(
-    prefixIcon: Icon(
-      Icons.sort,
-      color: Color(0xFF1C6A50),
-    ),
-    border: InputBorder.none,
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 4,
-    ),
-  ),
-  selectedItemBuilder: (context) {
-    return const [
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Sort By: Default',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Sort By: Price: Low to High',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Sort By: Price: High to Low',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    ];
-  },
-  items: const [
-    DropdownMenuItem(
-      value: 'Default',
-      child: Text('Default'),
-    ),
-    DropdownMenuItem(
-      value: 'Price: Low to High',
-      child: Text('Price: Low to High'),
-    ),
-    DropdownMenuItem(
-      value: 'Price: High to Low',
-      child: Text('Price: High to Low'),
-    ),
-  ],
-  onChanged: (value) {
-    if (value == null) return;
 
-    setState(() {
-      selectedSort = value;
-    });
-  },
-),
-);
+    // ======================================================
+    // SORT DROPDOWN
+    // ======================================================
+
+    final sortDropdown = Container(
+      width: isDesktop ? 360 : double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        initialValue: selectedSort,
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.sort, color: Color(0xFF1C6A50)),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        ),
+        selectedItemBuilder: (context) {
+          return const [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Sort By: Default',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Sort By: Price: Low to High',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Sort By: Price: High to Low',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ];
+        },
+        items: const [
+          DropdownMenuItem(value: 'Default', child: Text('Default')),
+          DropdownMenuItem(
+            value: 'Price: Low to High',
+            child: Text('Price: Low to High'),
+          ),
+          DropdownMenuItem(
+            value: 'Price: High to Low',
+            child: Text('Price: High to Low'),
+          ),
+        ],
+        onChanged: (value) {
+          if (value == null) return;
+
+          setState(() {
+            selectedSort = value;
+          });
+        },
+      ),
+    );
+
+    // ======================================================
+    // CATEGORY FILTERS
+    // ======================================================
 
     final filters = Wrap(
       spacing: 10,
@@ -440,16 +483,12 @@ class _BrandPageState extends State<BrandPage> {
           elevation: selected ? 3 : 0,
           pressElevation: 5,
           side: BorderSide(
-            color: selected
-                ? const Color(0xFF1C6A50)
-                : const Color(0xFFE0E0E0),
+            color: selected ? const Color(0xFF1C6A50) : const Color(0xFFE0E0E0),
           ),
           label: Text(
             category,
             style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : Colors.black87,
+              color: selected ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -462,47 +501,55 @@ class _BrandPageState extends State<BrandPage> {
       }).toList(),
     );
 
- if (!isDesktop) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      searchBox,
-      const SizedBox(height: 18),
-      sortDropdown,
-      const SizedBox(height: 18),
-      filters,
-    ],
-  );
-}
+    // ======================================================
+    // MOBILE
+    // ======================================================
 
-return Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    // LEFT SIDE: Search + Sort
-    SizedBox(
-      width: 450,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    if (!isDesktop) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           searchBox,
-          const SizedBox(height: 14),
+
+          const SizedBox(height: 18),
+
           sortDropdown,
+
+          const SizedBox(height: 18),
+
+          filters,
         ],
-      ),
-    ),
+      );
+    }
 
-    const SizedBox(width: 34),
+    // ======================================================
+    // DESKTOP
+    // ======================================================
 
-    // RIGHT SIDE: Category filters
-    Expanded(
-      child: filters,
-    ),
-  ],
-);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // LEFT SIDE: Search + Sort
+        SizedBox(
+          width: 450,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [searchBox, const SizedBox(height: 14), sortDropdown],
+          ),
+        ),
 
- 
+        const SizedBox(width: 34),
+
+        // RIGHT SIDE: Category filters
+        Expanded(child: filters),
+      ],
+    );
   }
 }
+
+// ======================================================
+// BRAND PRODUCT CARD
+// ======================================================
 
 class BrandProductCard extends StatefulWidget {
   final Map<String, String> product;
@@ -517,72 +564,79 @@ class BrandProductCard extends StatefulWidget {
   });
 
   @override
-  State<BrandProductCard> createState() =>
-      _BrandProductCardState();
+  State<BrandProductCard> createState() => _BrandProductCardState();
 }
 
-class _BrandProductCardState
-    extends State<BrandProductCard> {
+class _BrandProductCardState extends State<BrandProductCard> {
   bool hovering = false;
 
   @override
   Widget build(BuildContext context) {
-    final soldOut =
-        widget.product['price'] == 'SOLD OUT';
+    final stock = int.tryParse(widget.product['stock'] ?? '0') ?? 0;
+
+    final soldOut = stock <= 0 || widget.product['price'] == 'SOLD OUT';
+
+    final price = double.tryParse(widget.product['price'] ?? '0') ?? 0;
+
+    final rating = double.tryParse(widget.product['rating'] ?? '0') ?? 0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+
       onEnter: (_) {
         setState(() {
           hovering = true;
         });
       },
+
       onExit: (_) {
         setState(() {
           hovering = false;
         });
       },
+
       child: AnimatedContainer(
-        duration: const Duration(
-          milliseconds: 180,
-        ),
-        transform: Matrix4.translationValues(
-          0,
-          hovering ? -9 : 0,
-          0,
-        ),
+        duration: const Duration(milliseconds: 180),
+
+        transform: Matrix4.translationValues(0, hovering ? -9 : 0, 0),
+
         padding: const EdgeInsets.all(16),
+
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
+
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                alpha: hovering ? 0.18 : 0.06,
-              ),
+              color: Colors.black.withValues(alpha: hovering ? 0.18 : 0.06),
               blurRadius: hovering ? 18 : 8,
-              offset: Offset(
-                0,
-                hovering ? 10 : 4,
-              ),
+              offset: Offset(0, hovering ? 10 : 4),
             ),
           ],
         ),
+
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+
           children: [
             Expanded(
               child: Image.asset(
-                widget.product['image']!,
+                widget.product['image'] ?? '',
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 60,
+                    color: Colors.grey,
+                  );
+                },
               ),
             ),
 
             const SizedBox(height: 14),
 
             Text(
-              widget.product['name']!,
+              widget.product['name'] ?? '',
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -595,8 +649,9 @@ class _BrandProductCardState
 
             const SizedBox(height: 8),
 
+            // Rating stars
             Text(
-              widget.product['rating']!,
+              '★' * rating.round(),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Color(0xFFFFC107),
@@ -606,14 +661,12 @@ class _BrandProductCardState
             ),
 
             Text(
-              widget.product['price']!,
+              soldOut ? 'SOLD OUT' : '৳${price.toStringAsFixed(0)}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: soldOut
-                    ? Colors.red
-                    : Colors.black54,
+                color: soldOut ? Colors.red : Colors.black54,
               ),
             ),
 
@@ -621,17 +674,13 @@ class _BrandProductCardState
 
             OutlinedButton(
               onPressed: widget.onDetails,
-              child: const Text(
-                'VIEW DETAILS',
-              ),
+              child: const Text('VIEW DETAILS'),
             ),
 
             if (!soldOut)
               TextButton(
                 onPressed: widget.onAddToCart,
-                child: const Text(
-                  'ADD TO CART',
-                ),
+                child: const Text('ADD TO CART'),
               ),
           ],
         ),

@@ -2,9 +2,9 @@ const User = require("../models/User");
 const Product = require("../models/Product");
 const Order = require("../models/orderModel");
 
-// =========================
-// 👥 MANAGE USERS
-// =========================
+// ============================================================
+// MANAGE USERS
+// ============================================================
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -46,9 +46,9 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// =========================
-// 📊 ADMIN DASHBOARD STATS
-// =========================
+// ============================================================
+// ADMIN DASHBOARD STATS
+// ============================================================
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -59,13 +59,17 @@ exports.getDashboardStats = async (req, res) => {
       {
         $match: {
           paymentStatus: "Paid",
-          status: { $ne: "Cancelled" },
+          status: {
+            $ne: "Cancelled",
+          },
         },
       },
       {
         $group: {
           _id: null,
-          totalSales: { $sum: "$totalAmount" },
+          totalSales: {
+            $sum: "$totalAmount",
+          },
         },
       },
     ]);
@@ -87,16 +91,16 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-// =========================
-// 📦 MANAGE PRODUCTS
-// =========================
+// ============================================================
+// MANAGE PRODUCTS
+// ============================================================
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
-  .populate("brand", "name")
-  .populate("category", "name");
+      .populate("brand", "name")
+      .populate("category", "name");
 
     res.status(200).json({
       products,
@@ -133,10 +137,9 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-
-// =========================
-// 🛒 MANAGE ORDERS
-// =========================
+// ============================================================
+// MANAGE ORDERS
+// ============================================================
 
 // Get all orders
 exports.getAllOrders = async (req, res) => {
@@ -144,7 +147,9 @@ exports.getAllOrders = async (req, res) => {
     const orders = await Order.find()
       .populate("user", "-password")
       .populate("items.product")
-      .sort({ createdAt: -1 });
+      .sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       orders,
@@ -155,7 +160,6 @@ exports.getAllOrders = async (req, res) => {
     });
   }
 };
-
 
 // Update order status
 exports.updateOrderStatus = async (req, res) => {

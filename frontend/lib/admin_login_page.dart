@@ -18,88 +18,73 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   bool obscurePassword = true;
   bool isLoading = false;
 
- Future<void> adminLogin() async {
-  final email = emailController.text.trim();
-  final password = passwordController.text;
+  Future<void> adminLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
 
-  if (email.isEmpty || password.isEmpty) {
-    _showMessage('Please enter your email and password.');
-    return;
-  }
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter your email and password.');
+      return;
+    }
 
-  setState(() {
-    isLoading = true;
-  });
+    setState(() {
+      isLoading = true;
+    });
 
-  try {
-    final response = await http.post(
-      Uri.parse(
-        'http://localhost:5000/api/auth/admin-login',
-      ),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
-
-    final data = jsonDecode(response.body);
-
-    if (!mounted) return;
-
-    if (response.statusCode == 200) {
-      final token = data['token'];
-
-      if (token == null || token.toString().isEmpty) {
-        _showMessage('Admin login failed: token not received.');
-        return;
-      }
-
-      // Save the admin JWT.
-      await AuthService.saveToken(
-        token.toString(),
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/api/auth/admin-login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
       );
+
+      final data = jsonDecode(response.body);
 
       if (!mounted) return;
 
-      // IMPORTANT:
-      // Go directly to the admin dashboard.
-      // Do not pop back to the customer login/homepage.
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const AdminDashboardPage(),
-        ),
-        (route) => false,
-      );
-    } else {
-      _showMessage(
-        data['message'] ??
-            'Invalid admin email or password.',
-      );
-    }
-  } catch (e) {
-    if (!mounted) return;
+      if (response.statusCode == 200) {
+        final token = data['token'];
 
-    _showMessage(
-      'Unable to connect to the server. '
-      'Make sure the backend is running on port 5000.',
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
+        if (token == null || token.toString().isEmpty) {
+          _showMessage('Admin login failed: token not received.');
+          return;
+        }
+
+        // Save the admin JWT.
+        await AuthService.saveToken(token.toString());
+
+        if (!mounted) return;
+
+        // IMPORTANT:
+        // Go directly to the admin dashboard.
+        // Do not pop back to the customer login/homepage.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
+          (route) => false,
+        );
+      } else {
+        _showMessage(data['message'] ?? 'Invalid admin email or password.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to connect to the server. '
+        'Make sure the backend is running on port 5000.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
-}
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -121,15 +106,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           // =========================================================
           // BACKGROUND IMAGE
           // =========================================================
-          Image.asset(
-            'assets/images/hero-banner-2.jpg',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/hero-banner-2.jpg', fit: BoxFit.cover),
 
           // Slight white overlay
-          Container(
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
+          Container(color: Colors.white.withValues(alpha: 0.18)),
 
           // =========================================================
           // ADMIN LOGIN BOX
@@ -200,15 +180,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         fillColor: Colors.white.withValues(alpha: 0.85),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -247,15 +223,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         fillColor: Colors.white.withValues(alpha: 0.85),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: const BorderSide(
-                            color: Colors.black26,
-                          ),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -325,9 +297,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                       ),
                       child: const Text(
                         'Back to Login',

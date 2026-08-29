@@ -1,6 +1,5 @@
 const adminMiddleware = (req, res, next) => {
-
-  console.log(req.user); // 👈 এই লাইনটা এখানে যোগ করো
+  console.log("Admin check - User:", req.user);
 
   if (!req.user) {
     return res.status(401).json({
