@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'catalog_page.dart';
+
+import 'auth_service.dart';
+import 'brand_page.dart';
+import 'brand_service.dart';
 import 'cart_model.dart';
 import 'cart_page.dart';
-import 'brand_page.dart';
-import 'product_detail_page.dart';
+import 'catalog_page.dart';
 import 'login_page.dart';
-import 'admin_login_page.dart';
 import 'profile_page.dart';
-import 'auth_service.dart';
-import 'brand_service.dart';
 import 'services/product_service.dart';
-
 
 final CartModel appCart = CartModel();
 
 void main() {
   runApp(const KBeautyApp());
 }
+
+// ============================================================
+// APP
+// ============================================================
 
 class KBeautyApp extends StatelessWidget {
   const KBeautyApp({super.key});
@@ -31,9 +33,7 @@ class KBeautyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFF4F3F1),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF1C6A50),
-          ),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1C6A50)),
         ),
         home: const HomePage(),
       ),
@@ -41,7 +41,12 @@ class KBeautyApp extends StatelessWidget {
   }
 }
 
+// ============================================================
+// PRODUCT MODEL
+// ============================================================
+
 class Product {
+  final String id;
   final String name;
   final String brand;
   final String price;
@@ -52,6 +57,7 @@ class Product {
   final bool newArrival;
 
   const Product({
+    required this.id,
     required this.name,
     required this.brand,
     required this.price,
@@ -70,16 +76,15 @@ class Product {
       name: product['name']?.toString() ?? '',
       brand: _getBrandName(product['brand']),
       price: _formatPrice(priceText),
-      image: product['image']?.toString() ??
-          product['imageUrl']?.toString() ??
-          '',
+      image:
+          product['image']?.toString() ?? product['imageUrl']?.toString() ?? '',
       rating: _getRating(product['rating']),
-      soldOut: product['soldOut'] == true ||
+      soldOut:
+          product['soldOut'] == true ||
           product['stock'] == 0 ||
           priceText.toUpperCase() == 'SOLD OUT',
       vegan: product['vegan'] == true,
-      newArrival: product['newArrival'] == true ||
-          product['isNew'] == true,
+      newArrival: product['newArrival'] == true || product['isNew'] == true,
     );
   }
 
@@ -130,6 +135,10 @@ class Product {
   }
 }
 
+// ============================================================
+// HOME PAGE
+// ============================================================
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -139,22 +148,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String searchText = '';
+
   bool isLoggedIn = false;
 
-  List<String> brands = [];
-  List<Product> products = [];
+  // ===============================
+  // BRANDS
+  // ===============================
 
+  List<String> brands = [];
   bool isLoadingBrands = true;
+
+  // ===============================
+  // PRODUCTS FROM API
+  // ===============================
+
+  List<Map<String, String>> allProducts = [];
+
   bool isLoadingProducts = true;
+
   String? productError;
 
   @override
   void initState() {
     super.initState();
+
     _checkLoginStatus();
     _loadBrands();
-    _loadProducts();
+    loadProducts();
   }
+
+  // ===============================
+  // CHECK LOGIN STATUS
+  // ===============================
 
   Future<void> _checkLoginStatus() async {
     final loggedIn = await AuthService.isLoggedIn();
@@ -165,6 +190,10 @@ class _HomePageState extends State<HomePage> {
       isLoggedIn = loggedIn;
     });
   }
+
+  // ===============================
+  // LOAD BRANDS FROM API
+  // ===============================
 
   Future<void> _loadBrands() async {
     try {
@@ -184,6 +213,10 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+
+  // ===============================
+  // LOAD PRODUCTS FROM API
+  // ===============================
 
   Future<void> _loadProducts() async {
     setState(() {
@@ -212,6 +245,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // ===============================
+  // OPEN LOGIN PAGE
+  // ===============================
+
   Future<bool> openLoginPage() async {
     final result = await Navigator.push(
       context,
@@ -222,37 +259,68 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLoggedIn = true;
       });
+
       return true;
     }
 
     return false;
   }
 
- List<Product> get visibleProducts {
-  if (searchText.trim().isEmpty) {
-    return [];
+  // ===============================
+  // SEARCH PRODUCTS
+  // ===============================
+
+  List<Product> get visibleProducts {
+    final query = searchText.trim().toLowerCase();
+
+    return allProducts
+        .where((product) {
+          if (query.isEmpty) {
+            return true;
+          }
+
+          final name = product['name']?.toLowerCase() ?? '';
+          final brand = product['brand']?.toLowerCase() ?? '';
+
+          return name.contains(query) || brand.contains(query);
+        })
+        .map(
+          (product) => Product(
+            name: product['name'] ?? '',
+            brand: product['brand'] ?? '',
+            price: product['price'] ?? '',
+            image: product['image'] ?? '',
+            rating: product['rating'] ?? '★★★★★',
+            soldOut: product['price'] == 'SOLD OUT',
+            vegan: product['vegan'] == 'true',
+            newArrival: product['newArrival'] == 'true',
+          ),
+        )
+        .toList();
   }
 
-  final query = searchText.trim().toLowerCase();
-
-  return products.where((product) {
-    return product.name.toLowerCase().contains(query) ||
-        product.brand.toLowerCase().contains(query);
-  }).toList();
-}
+  // ===============================
+  // SHOW MESSAGE
+  // ===============================
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  // ===============================
+  // ADD TO CART
+  // ===============================
+
   Future<void> addToCart(Product product) async {
+    // Sold out check
     if (product.soldOut) {
       showMessage('Sorry, this product is sold out.');
       return;
     }
 
+    // Login check
     final loggedIn = await AuthService.isLoggedIn();
 
     if (!loggedIn) {
@@ -261,6 +329,7 @@ class _HomePageState extends State<HomePage> {
       if (!loginSuccess) return;
     }
 
+    // Add product to cart
     appCart.add({
       'name': product.name,
       'brand': product.brand,
@@ -272,8 +341,13 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
 
     setState(() {});
+
     showMessage('${product.name} added to cart.');
   }
+
+  // ===============================
+  // BUILD
+  // ===============================
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +384,7 @@ class _HomePageState extends State<HomePage> {
                   ),
 
                 if (searchText.trim().isNotEmpty)
-  _productSection(constraints.maxWidth),
+                  _productSection(constraints.maxWidth),
               ],
             ),
           );
@@ -319,6 +393,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // DESKTOP HEADER
+  // ===============================
+
   Widget _desktopHeader() {
     return Container(
       color: Colors.white,
@@ -326,65 +404,37 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         children: [
           SizedBox(
-  width: 180,
-  child: Align(
-    alignment: Alignment.centerLeft,
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        isLoggedIn
-            ? IconButton(
-                tooltip: 'My Profile',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ProfilePage(),
+            width: 180,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: isLoggedIn
+                  ? IconButton(
+                      tooltip: 'My Profile',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProfilePage(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.account_circle_outlined, size: 30),
+                    )
+                  : TextButton(
+                      onPressed: openLoginPage,
+                      child: const Text(
+                        'LOGIN',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
-                  );
-                },
-                icon: const Icon(
-                  Icons.account_circle_outlined,
-                  size: 30,
-                ),
-              )
-            : TextButton(
-                onPressed: openLoginPage,
-                child: const Text(
-                  'LOGIN',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-
-        const SizedBox(width: 5),
-
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const AdminLoginPage(),
-              ),
-            );
-          },
-          child: const Text(
-            'ADMIN',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
             ),
           ),
-        ),
-      ],
-    ),
-  ),
-),
 
+          // LOGO
           const Expanded(
             child: Center(
               child: Text(
@@ -435,6 +485,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // MOBILE HEADER
+  // ===============================
+
   Widget _mobileHeader() {
     return Container(
       color: Colors.white,
@@ -471,10 +525,7 @@ class _HomePageState extends State<HomePage> {
                 child: Text(
                   'K-BEAUTY BD',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
                 ),
               ),
 
@@ -506,6 +557,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // CART BUTTON
+  // ===============================
+
   Widget _cartButton() {
     return Stack(
       children: [
@@ -518,6 +573,7 @@ class _HomePageState extends State<HomePage> {
           },
           icon: const Icon(Icons.shopping_bag_outlined),
         ),
+
         if (appCart.totalItems > 0)
           Positioned(
             top: 4,
@@ -527,10 +583,7 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: Colors.deepOrange,
               child: Text(
                 '${appCart.totalItems}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 10),
               ),
             ),
           ),
@@ -538,16 +591,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // HERO
+  // ===============================
+
   Widget _hero(bool isDesktop) {
     return SizedBox(
       width: double.infinity,
       height: isDesktop ? 380 : 240,
-      child: Image.asset(
-        'assets/images/hero-banner-1.jpg',
-        fit: BoxFit.cover,
-      ),
+      child: Image.asset('assets/images/hero-banner-1.jpg', fit: BoxFit.cover),
     );
   }
+
+  // ===============================
+  // INTRO
+  // ===============================
 
   Widget _intro() {
     return Container(
@@ -567,23 +625,22 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 18),
           Text(
             "Skin care is a personal journey and we're here to guide you along the way.",
-            style: TextStyle(
-              fontSize: 19,
-              color: Color(0xFF3F3F3F),
-            ),
+            style: TextStyle(fontSize: 19, color: Color(0xFF3F3F3F)),
           ),
         ],
       ),
     );
   }
 
+  // ===============================
+  // BRAND FILTERS
+  // ===============================
+
   Widget _brandFilters() {
     if (isLoadingBrands) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -597,34 +654,32 @@ class _HomePageState extends State<HomePage> {
         runSpacing: 8,
         children: allBrands.map((brand) {
           return TextButton(
-          onPressed: () {
-  if (brand == 'ALL') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CatalogPage(),
-      ),
-    );
-  } else {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BrandPage(
-          brand: brand,
-          products: products.map((product) {
-            return {
-              'name': product.name,
-              'brand': product.brand,
-              'price': product.price,
-              'image': product.image,
-              'rating': product.rating,
-            };
-          }).toList(),
-        ),
-      ),
-    );
-  }
-},
+            onPressed: () {
+              if (brand == 'ALL') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CatalogPage()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BrandPage(
+                      brand: brand,
+                      products: products.map((product) {
+                        return {
+                          'name': product.name,
+                          'brand': product.brand,
+                          'price': product.price,
+                          'image': product.image,
+                          'rating': product.rating,
+                        };
+                      }).toList(),
+                    ),
+                  ),
+                );
+              }
+            },
             child: Text(
               brand.toUpperCase(),
               style: TextStyle(
@@ -640,20 +695,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // PRODUCT SECTION
+  // ===============================
+
   Widget _productSection(double width) {
     final isMobile = width < 650;
     final columns = width >= 1200
         ? 4
         : width >= 750
-            ? 3
-            : 2;
+        ? 3
+        : 2;
 
     if (isLoadingProducts) {
       return const Padding(
         padding: EdgeInsets.all(60),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -666,10 +723,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16),
             const Text(
               'Failed to load products.',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
@@ -688,19 +742,17 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (visibleProducts.isEmpty) {
-  // Keep the home page empty when there is no search.
-  if (searchText.trim().isEmpty) {
-    return const SizedBox.shrink();
-  }
+      return const Padding(
+        padding: EdgeInsets.all(50),
+        child: Center(
+          child: Text('No products found.', style: TextStyle(fontSize: 18)),
+        ),
+      );
+    }
 
-  return const Padding(
-    padding: EdgeInsets.all(50),
-    child: Text(
-      'No products found.',
-      style: TextStyle(fontSize: 18),
-    ),
-  );
-}
+    // ===============================
+    // API PRODUCTS
+    // ===============================
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 1500),
@@ -722,11 +774,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ===============================
+  // PRODUCT CARD
+  // ===============================
+
   Widget _productCard(Product product) {
     return _HomeProductCard(
       product: product,
       onTap: () {
         final productData = <String, String>{
+          'id': product.id,
           'name': product.name,
           'brand': product.brand,
           'price': product.price,
@@ -746,15 +803,15 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// ======================================================
+// BADGE
+// ======================================================
+
 class Badge extends StatelessWidget {
   final String text;
   final Color color;
 
-  const Badge({
-    super.key,
-    required this.text,
-    required this.color,
-  });
+  const Badge({super.key, required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -771,6 +828,10 @@ class Badge extends StatelessWidget {
     );
   }
 }
+
+// ======================================================
+// HOME PRODUCT CARD
+// ======================================================
 
 class _HomeProductCard extends StatefulWidget {
   final Product product;
@@ -790,6 +851,42 @@ class _HomeProductCard extends StatefulWidget {
 class _HomeProductCardState extends State<_HomeProductCard> {
   bool hovering = false;
 
+  // ============================================================
+  // IMAGE
+  // ============================================================
+
+  Widget _image(String image) {
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      return Image.network(
+        image,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              size: 50,
+              color: Colors.black26,
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      image,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            size: 50,
+            color: Colors.black26,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
@@ -808,9 +905,7 @@ class _HomeProductCardState extends State<_HomeProductCard> {
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                alpha: hovering ? 0.18 : 0.06,
-              ),
+              color: Colors.black.withValues(alpha: hovering ? 0.18 : 0.06),
               blurRadius: hovering ? 18 : 8,
               offset: Offset(0, hovering ? 10 : 4),
             ),
@@ -829,37 +924,36 @@ class _HomeProductCardState extends State<_HomeProductCard> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: product.image.isNotEmpty
-                        ? Image.network(
-                            product.image,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) =>
-                                const Icon(Icons.image_not_supported_outlined),
-                          )
-                        : const Icon(
+
+                    child: Image.asset(
+                      product.image,
+                      fit: BoxFit.contain,
+
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
                             Icons.image_not_supported_outlined,
                             size: 50,
+                            color: Colors.black26,
                           ),
+                        );
+                      },
+                    ),
                   ),
 
+                  // VEGAN BADGE
                   if (product.vegan)
                     const Positioned(
                       top: 10,
                       left: 10,
-                      child: Badge(
-                        text: 'Vegan',
-                        color: Color(0xFF167C59),
-                      ),
+                      child: Badge(text: 'Vegan', color: Color(0xFF167C59)),
                     ),
 
                   if (product.newArrival)
                     const Positioned(
                       top: 66,
                       left: 10,
-                      child: Badge(
-                        text: 'New',
-                        color: Color(0xFF5635A8),
-                      ),
+                      child: Badge(text: 'New', color: Color(0xFF5635A8)),
                     ),
                 ],
               ),
@@ -872,10 +966,7 @@ class _HomeProductCardState extends State<_HomeProductCard> {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
 
             const SizedBox(height: 5),
@@ -911,9 +1002,7 @@ class _HomeProductCardState extends State<_HomeProductCard> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: product.soldOut
-                    ? Colors.red.shade700
-                    : Colors.black54,
+                color: product.soldOut ? Colors.red.shade700 : Colors.black54,
               ),
             ),
 
