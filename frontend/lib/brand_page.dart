@@ -28,9 +28,10 @@ class _BrandPageState extends State<BrandPage> {
     final brandMatches =
     product['brand']?.toLowerCase() == widget.brand.toLowerCase();
 
-    final categoryMatches =
-        selectedCategory == 'All' ||
-        product['category'] == selectedCategory;
+  final categoryMatches =
+    selectedCategory == 'All' ||
+    product['category']?.toLowerCase() ==
+        selectedCategory.toLowerCase();
 
     final searchMatches = product['name']!
         .toLowerCase()
@@ -84,17 +85,27 @@ class _BrandPageState extends State<BrandPage> {
 }
 
   List<String> get categories {
-    final categorySet = <String>{'All'};
+  final categorySet = <String>{'All'};
 
-    for (final product in widget.products) {
-      if (product['brand'] == widget.brand &&
-          product['category'] != null) {
-        categorySet.add(product['category']!);
-      }
+  for (final product in widget.products) {
+    final productBrand =
+        product['brand']?.trim().toLowerCase();
+
+    final currentBrand =
+        widget.brand.trim().toLowerCase();
+
+    final category =
+        product['category']?.trim();
+
+    if (productBrand == currentBrand &&
+        category != null &&
+        category.isNotEmpty) {
+      categorySet.add(category);
     }
-
-    return categorySet.toList();
   }
+
+  return categorySet.toList();
+}
 
   void addToCart(Map<String, String> product) {
     if (product['price'] == 'SOLD OUT') {

@@ -51,6 +51,7 @@ class Product {
   final String id;
   final String name;
   final String brand;
+  final String category;
   final String price;
   final String image;
   final String rating;
@@ -62,6 +63,7 @@ class Product {
     required this.id,
     required this.name,
     required this.brand,
+    required this.category,
     required this.price,
     required this.image,
     required this.rating,
@@ -70,7 +72,7 @@ class Product {
     this.newArrival = false,
   });
 
-  factory Product.fromMap(Map<String, dynamic> product) {
+ factory Product.fromMap(Map<String, dynamic> product) {
   final dynamic rawPrice = product['price'];
   final String priceText = rawPrice?.toString() ?? '';
 
@@ -78,9 +80,9 @@ class Product {
     id: product['_id']?.toString() ?? product['id']?.toString() ?? '',
     name: product['name']?.toString() ?? '',
     brand: _getBrandName(product['brand']),
+    category: _getCategoryName(product['category']),
     price: _formatPrice(priceText),
-    image:
-        product['image']?.toString() ??
+    image: product['image']?.toString() ??
         product['imageUrl']?.toString() ??
         '',
     rating: _getRating(product['rating']),
@@ -95,14 +97,20 @@ class Product {
   );
 }
 
-  static String _getBrandName(dynamic brand) {
+static String _getBrandName(dynamic brand) {
     if (brand is Map) {
       return brand['name']?.toString() ?? '';
     }
 
     return brand?.toString() ?? '';
   }
+static String _getCategoryName(dynamic category) {
+  if (category is Map) {
+    return category['name']?.toString() ?? '';
+  }
 
+  return category?.toString() ?? '';
+}
   static String _formatPrice(String price) {
     if (price.isEmpty) {
       return '';
@@ -769,6 +777,7 @@ List<Product> get visibleProducts {
                           'id': product.id,
                           'name': product.name,
                           'brand': product.brand,
+                           'category': product.category,
                           'price': product.price,
                           'image': product.image,
                           'rating': product.rating,
@@ -882,6 +891,7 @@ List<Product> get visibleProducts {
           'id': product.id,
           'name': product.name,
           'brand': product.brand,
+          'category': product.category,
           'price': product.price,
           'image': product.image,
           'rating': product.rating,
