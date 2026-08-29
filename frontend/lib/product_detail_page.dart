@@ -4,18 +4,18 @@ import 'cart_model.dart';
 class ProductDetailPage extends StatefulWidget {
   final Map<String, String> product;
 
-  const ProductDetailPage({
-    super.key,
-    required this.product,
-  });
+  const ProductDetailPage({super.key, required this.product});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  final TextEditingController quantityController =
-      TextEditingController(text: '1');
+  final TextEditingController quantityController = TextEditingController(
+    text: '1',
+  );
+
+  bool isAddingToCart = false;
 
   bool get isSoldOut => widget.product['price'] == 'SOLD OUT';
 
@@ -39,8 +39,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return 'A gentle cleanser that removes daily impurities while helping your skin feel clean, refreshed, and comfortable.';
     }
 
-    if (name.contains('Serum') ||
-        name.contains('Ampoule')) {
+    if (name.contains('Serum') || name.contains('Ampoule')) {
       return 'A nourishing skincare treatment designed to hydrate, improve the appearance of the skin, and support a healthy-looking complexion.';
     }
 
@@ -50,20 +49,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return 'A moisturizing skincare product designed to nourish the skin, improve hydration, and support a soft and healthy-looking complexion.';
     }
 
-    if (name.contains('Toner') ||
-        name.contains('Water')) {
+    if (name.contains('Toner') || name.contains('Water')) {
       return 'A refreshing skincare product that helps hydrate and prepare the skin for the next steps in your skincare routine.';
     }
 
     return 'A carefully selected Korean skincare product designed to support a healthy, hydrated, and balanced-looking complexion.';
   }
 
-  void buyProduct() {
+  // ===============================
+  // ADD PRODUCT TO CART
+  // ===============================
+
+  Future<void> buyProduct() async {
     if (isSoldOut) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sorry, this product is sold out.'),
-        ),
+        const SnackBar(content: Text('Sorry, this product is sold out.')),
       );
       return;
     }
@@ -72,20 +72,48 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
     if (quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid quantity.'),
-        ),
+        const SnackBar(content: Text('Please enter a valid quantity.')),
       );
       return;
     }
 
-    CartScope.of(context).add(widget.product, quantity);
+    // Check Product ID
+    final productId = widget.product['id'] ?? '';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$quantity item(s) added to your cart.'),
-      ),
-    );
+    if (productId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product ID is missing.')));
+      return;
+    }
+
+    if (isAddingToCart) return;
+
+    setState(() {
+      isAddingToCart = true;
+    });
+
+    try {
+      await CartScope.of(context).add(widget.product, quantity);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$quantity item(s) added to your cart.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add product to cart: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isAddingToCart = false;
+        });
+      }
+    }
   }
 
   @override
@@ -106,7 +134,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final productDetails = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ===============================
         // BRAND
+        // ===============================
+
         Text(
           productBrand,
           style: const TextStyle(
@@ -119,7 +150,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 10),
 
+        // ===============================
         // PRODUCT NAME
+        // ===============================
         Text(
           productName,
           style: const TextStyle(
@@ -131,7 +164,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 14),
 
+        // ===============================
         // RATING
+        // ===============================
         Row(
           children: [
             Text(
@@ -156,29 +191,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 18),
 
+        // ===============================
         // PRICE
+        // ===============================
         Text(
           productPrice,
           style: TextStyle(
             fontSize: 27,
             fontWeight: FontWeight.w800,
-            color: isSoldOut
-                ? Colors.red
-                : const Color(0xFFE53935),
+            color: isSoldOut ? Colors.red : const Color(0xFFE53935),
           ),
         ),
 
         const SizedBox(height: 25),
 
-        // DIVIDER
-        const Divider(
-          thickness: 1,
-          color: Color(0xFFE5E5E5),
-        ),
+        const Divider(thickness: 1, color: Color(0xFFE5E5E5)),
 
         const SizedBox(height: 25),
 
+        // ===============================
         // DESCRIPTION TITLE
+        // ===============================
         const Text(
           'PRODUCT DESCRIPTION',
           style: TextStyle(
@@ -190,7 +223,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 12),
 
+        // ===============================
         // DESCRIPTION
+        // ===============================
         Text(
           description,
           style: const TextStyle(
@@ -202,7 +237,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 25),
 
+        // ===============================
         // PRODUCT INFORMATION
+        // ===============================
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -211,18 +248,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
           child: const Row(
             children: [
-              Icon(
-                Icons.verified_outlined,
-                color: Color(0xFF1C6A50),
-              ),
+              Icon(Icons.verified_outlined, color: Color(0xFF1C6A50)),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Suitable for all skin types / Made in Korea',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF4B4B4B),
-                  ),
+                  style: TextStyle(fontSize: 16, color: Color(0xFF4B4B4B)),
                 ),
               ),
             ],
@@ -231,7 +262,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         const SizedBox(height: 32),
 
+        // ===============================
         // QUANTITY + BUY
+        // ===============================
         Wrap(
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 16,
@@ -239,10 +272,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           children: [
             const Text(
               'Quantity:',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
             ),
 
             SizedBox(
@@ -252,31 +282,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 controller: quantityController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
+                enabled: !isAddingToCart,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
             ),
 
             SizedBox(
               height: 54,
               child: FilledButton(
-                onPressed: buyProduct,
+                onPressed: isSoldOut || isAddingToCart ? null : buyProduct,
                 style: FilledButton.styleFrom(
-                  backgroundColor: isSoldOut
-                      ? Colors.grey
-                      : Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                  ),
+                  backgroundColor: isSoldOut ? Colors.grey : Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
                 ),
-                child: Text(
-                  isSoldOut ? 'SOLD OUT' : 'BUY',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: isAddingToCart
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        isSoldOut ? 'SOLD OUT' : 'BUY',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -290,21 +324,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       body: SafeArea(
         child: Column(
           children: [
+            // ===============================
             // HEADER
+            // ===============================
+
             Container(
               height: 82,
               color: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 38,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 38),
               child: Row(
                 children: [
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.black,
-                    ),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
                     label: const Text(
                       'BACK',
                       style: TextStyle(
@@ -333,19 +365,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
 
+            // ===============================
             // CONTENT
+            // ===============================
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(28),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 1360,
-                    ),
+                    constraints: const BoxConstraints(maxWidth: 1360),
                     child: Container(
-                      padding: EdgeInsets.all(
-                        isDesktop ? 60 : 28,
-                      ),
+                      padding: EdgeInsets.all(isDesktop ? 60 : 28),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
@@ -359,10 +389,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       child: isDesktop
                           ? Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 // PRODUCT IMAGE
+
                                 Expanded(
                                   child: SizedBox(
                                     height: 480,
@@ -376,17 +406,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 const SizedBox(width: 70),
 
                                 // PRODUCT INFORMATION
-                                Expanded(
-                                  flex: 2,
-                                  child: productDetails,
-                                ),
+                                Expanded(flex: 2, child: productDetails),
                               ],
                             )
                           : Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // PRODUCT IMAGE
+
                                 SizedBox(
                                   height: 360,
                                   width: double.infinity,
