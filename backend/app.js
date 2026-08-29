@@ -1,4 +1,3 @@
-
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -14,6 +13,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const brandRoutes = require("./routes/brandRoutes");
 
 const app = express();
+
 app.use(cors());
 
 // Body parsers

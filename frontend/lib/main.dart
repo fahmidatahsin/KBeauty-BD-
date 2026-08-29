@@ -8,8 +8,10 @@ import 'login_page.dart';
 import 'profile_page.dart';
 import 'auth_service.dart';
 import 'brand_service.dart';
+import 'services/product_service.dart';
 
 final CartModel appCart = CartModel();
+
 void main() {
   runApp(const KBeautyApp());
 }
@@ -67,14 +69,35 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String searchText = '';
   bool isLoggedIn = false;
+
+  // ===============================
+  // BRANDS
+  // ===============================
+
   List<String> brands = [];
-bool isLoadingBrands = true;
+  bool isLoadingBrands = true;
+
+  // ===============================
+  // PRODUCTS FROM API
+  // ===============================
+
+  List<Map<String, String>> allProducts = [];
+
+  bool isLoadingProducts = true;
+  String? productError;
+
   @override
-void initState() {
-  super.initState();
-  _checkLoginStatus();
-  _loadBrands();
-}
+  void initState() {
+    super.initState();
+
+    _checkLoginStatus();
+    _loadBrands();
+    loadProducts();
+  }
+
+  // ===============================
+  // CHECK LOGIN STATUS
+  // ===============================
 
   Future<void> _checkLoginStatus() async {
     final loggedIn = await AuthService.isLoggedIn();
@@ -85,24 +108,62 @@ void initState() {
       isLoggedIn = loggedIn;
     });
   }
+
+  // ===============================
+  // LOAD BRANDS FROM API
+  // ===============================
+
   Future<void> _loadBrands() async {
-  try {
-    final loadedBrands = await BrandService.getBrands();
+    try {
+      final loadedBrands = await BrandService.getBrands();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      brands = loadedBrands;
-      isLoadingBrands = false;
-    });
-  } catch (error) {
-    if (!mounted) return;
+      setState(() {
+        brands = loadedBrands;
+        isLoadingBrands = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
 
-    setState(() {
-      isLoadingBrands = false;
-    });
+      setState(() {
+        isLoadingBrands = false;
+      });
+
+      debugPrint('Failed to load brands: $error');
+    }
   }
-}
+
+  // ===============================
+  // LOAD PRODUCTS FROM API
+  // ===============================
+
+  Future<void> loadProducts() async {
+    try {
+      final fetchedProducts = await ProductService.getProducts();
+
+      if (!mounted) return;
+
+      setState(() {
+        allProducts = fetchedProducts;
+        isLoadingProducts = false;
+        productError = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoadingProducts = false;
+        productError = error.toString();
+      });
+
+      debugPrint('Failed to load products: $error');
+    }
+  }
+
+  // ===============================
+  // OPEN LOGIN PAGE
+  // ===============================
 
   Future<bool> openLoginPage() async {
     final result = await Navigator.push(
@@ -121,15 +182,19 @@ void initState() {
     return false;
   }
 
-  List<Product> get visibleProducts {
-  if (searchText.trim().isEmpty) {
-    return [];
-  }
+  // ===============================
+  // SEARCH PRODUCTS
+  // ===============================
 
+  List<Product> get visibleProducts {
     final query = searchText.trim().toLowerCase();
 
     return allProducts
         .where((product) {
+          if (query.isEmpty) {
+            return true;
+          }
+
           final name = product['name']?.toLowerCase() ?? '';
           final brand = product['brand']?.toLowerCase() ?? '';
 
@@ -141,12 +206,18 @@ void initState() {
             brand: product['brand'] ?? '',
             price: product['price'] ?? '',
             image: product['image'] ?? '',
-            rating: product['rating'] ?? '',
+            rating: product['rating'] ?? '★★★★★',
             soldOut: product['price'] == 'SOLD OUT',
+            vegan: product['vegan'] == 'true',
+            newArrival: product['newArrival'] == 'true',
           ),
         )
         .toList();
   }
+
+  // ===============================
+  // SHOW MESSAGE
+  // ===============================
 
   void showMessage(String message) {
     ScaffoldMessenger.of(
@@ -154,27 +225,29 @@ void initState() {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  // ===============================
+  // ADD TO CART
+  // ===============================
+
   Future<void> addToCart(Product product) async {
-    // Product sold out check
+    // Sold out check
     if (product.soldOut) {
       showMessage('Sorry, this product is sold out.');
       return;
     }
 
-    // Check actual saved login token
+    // Login check
     final loggedIn = await AuthService.isLoggedIn();
 
     if (!loggedIn) {
-      // Guest user -> Login page
       final loginSuccess = await openLoginPage();
 
-      // User cancelled login or login failed
       if (!loginSuccess) {
         return;
       }
     }
 
-    // Login successful -> continue adding the same product
+    // Add product to cart
     appCart.add({
       'name': product.name,
       'brand': product.brand,
@@ -189,6 +262,10 @@ void initState() {
 
     showMessage('${product.name} added to cart.');
   }
+
+  // ===============================
+  // BUILD
+  // ===============================
 
   @override
   Widget build(BuildContext context) {
@@ -213,9 +290,9 @@ void initState() {
                     padding: const EdgeInsets.fromLTRB(32, 30, 32, 0),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: const Text(
                         'SEARCH RESULTS',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
@@ -233,13 +310,17 @@ void initState() {
     );
   }
 
+  // ===============================
+  // DESKTOP HEADER
+  // ===============================
+
   Widget _desktopHeader() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       child: Row(
         children: [
-          // LEFT: LOGIN / PROFILE
+          // LOGIN / PROFILE
           SizedBox(
             width: 180,
             child: Align(
@@ -271,7 +352,7 @@ void initState() {
             ),
           ),
 
-          // CENTER: LOGO
+          // LOGO
           const Expanded(
             child: Center(
               child: Text(
@@ -285,7 +366,7 @@ void initState() {
             ),
           ),
 
-          // RIGHT: SEARCH + CART
+          // SEARCH + CART
           SizedBox(
             width: 400,
             child: Row(
@@ -313,9 +394,7 @@ void initState() {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 _cartButton(),
               ],
             ),
@@ -324,6 +403,10 @@ void initState() {
       ),
     );
   }
+
+  // ===============================
+  // MOBILE HEADER
+  // ===============================
 
   Widget _mobileHeader() {
     return Container(
@@ -397,6 +480,10 @@ void initState() {
     );
   }
 
+  // ===============================
+  // CART BUTTON
+  // ===============================
+
   Widget _cartButton() {
     return Stack(
       children: [
@@ -409,6 +496,7 @@ void initState() {
           },
           icon: const Icon(Icons.shopping_bag_outlined),
         ),
+
         if (appCart.totalItems > 0)
           Positioned(
             top: 4,
@@ -417,7 +505,7 @@ void initState() {
               radius: 8,
               backgroundColor: Colors.deepOrange,
               child: Text(
-                '$appCart.totalItems',
+                '${appCart.totalItems}',
                 style: const TextStyle(color: Colors.white, fontSize: 10),
               ),
             ),
@@ -426,6 +514,10 @@ void initState() {
     );
   }
 
+  // ===============================
+  // HERO
+  // ===============================
+
   Widget _hero(bool isDesktop) {
     return SizedBox(
       width: double.infinity,
@@ -433,6 +525,10 @@ void initState() {
       child: Image.asset('assets/images/hero-banner-1.jpg', fit: BoxFit.cover),
     );
   }
+
+  // ===============================
+  // INTRO
+  // ===============================
 
   Widget _intro() {
     return Container(
@@ -459,97 +555,172 @@ void initState() {
     );
   }
 
- Widget _brandFilters() {
-  if (isLoadingBrands) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Center(
-        child: CircularProgressIndicator(),
+  // ===============================
+  // BRAND FILTERS
+  // ===============================
+
+  Widget _brandFilters() {
+    if (isLoadingBrands) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final allBrands = ['ALL', ...brands];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
+        children: allBrands.map((brand) {
+          return TextButton(
+            onPressed: () {
+              if (brand == 'ALL') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CatalogPage()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        BrandPage(brand: brand, products: allProducts),
+                  ),
+                );
+              }
+            },
+            child: Text(
+              brand.toUpperCase(),
+              style: TextStyle(
+                color: Colors.blue.shade800,
+                decoration: TextDecoration.underline,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  final allBrands = ['ALL', ...brands];
-
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-    child: Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 12,
-      runSpacing: 8,
-      children: allBrands.map((brand) {
-        return TextButton(
-          onPressed: () {
-            if (brand == 'ALL') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CatalogPage(),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BrandPage(
-                    brand: brand,
-                    products: allProducts,
-                  ),
-                ),
-              );
-            }
-          },
-          child: Text(
-            brand.toUpperCase(),
-            style: TextStyle(
-              color: Colors.blue.shade800,
-              decoration: TextDecoration.underline,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        );
-      }).toList(),
-    ),
-  );
-}
+  // ===============================
+  // PRODUCT SECTION
+  // ===============================
 
   Widget _productSection(double width) {
     final isMobile = width < 650;
+
     final columns = width >= 1200
         ? 4
         : width >= 750
         ? 3
         : 2;
 
+    // ===============================
+    // API LOADING
+    // ===============================
+
+    if (isLoadingProducts) {
+      return const Padding(
+        padding: EdgeInsets.all(80),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // ===============================
+    // API ERROR
+    // ===============================
+
+    if (productError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(50),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 50),
+
+            const SizedBox(height: 15),
+
+            const Text(
+              'Failed to load products.',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              productError!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54),
+            ),
+
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  isLoadingProducts = true;
+                  productError = null;
+                });
+
+                loadProducts();
+              },
+              child: const Text('RETRY'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ===============================
+    // NO PRODUCTS
+    // ===============================
+
+    if (visibleProducts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(50),
+        child: Center(
+          child: Text('No products found.', style: TextStyle(fontSize: 18)),
+        ),
+      );
+    }
+
+    // ===============================
+    // API PRODUCTS
+    // ===============================
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 1500),
       padding: const EdgeInsets.all(28),
-      child: visibleProducts.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.all(50),
-              child: Text('No products found.', style: TextStyle(fontSize: 18)),
-            )
-          : GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: visibleProducts.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: 22,
-                mainAxisSpacing: 30,
-                childAspectRatio: isMobile ? 0.54 : 0.65,
-              ),
-              itemBuilder: (context, index) {
-                return _productCard(visibleProducts[index]);
-              },
-            ),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: visibleProducts.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          crossAxisSpacing: 22,
+          mainAxisSpacing: 30,
+          childAspectRatio: isMobile ? 0.54 : 0.65,
+        ),
+        itemBuilder: (context, index) {
+          return _productCard(visibleProducts[index]);
+        },
+      ),
     );
   }
+
+  // ===============================
+  // PRODUCT CARD
+  // ===============================
 
   Widget _productCard(Product product) {
     return _HomeProductCard(
       product: product,
+
       onTap: () {
         final productData = <String, String>{
           'name': product.name,
@@ -566,10 +737,15 @@ void initState() {
           ),
         );
       },
+
       onAddToCart: () => addToCart(product),
     );
   }
 }
+
+// ======================================================
+// BADGE
+// ======================================================
 
 class Badge extends StatelessWidget {
   final String text;
@@ -592,6 +768,10 @@ class Badge extends StatelessWidget {
     );
   }
 }
+
+// ======================================================
+// HOME PRODUCT CARD
+// ======================================================
 
 class _HomeProductCard extends StatefulWidget {
   final Product product;
@@ -617,20 +797,31 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+
       onEnter: (_) {
-        setState(() => hovering = true);
+        setState(() {
+          hovering = true;
+        });
       },
+
       onExit: (_) {
-        setState(() => hovering = false);
+        setState(() {
+          hovering = false;
+        });
       },
+
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
+
         transform: Matrix4.translationValues(0, hovering ? -9 : 0, 0),
+
         padding: const EdgeInsets.all(16),
+
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
+
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: hovering ? 0.18 : 0.06),
@@ -639,9 +830,15 @@ class _HomeProductCardState extends State<_HomeProductCard> {
             ),
           ],
         ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+
           children: [
+            // ===============================
+            // IMAGE + BADGES
+            // ===============================
+
             Expanded(
               child: Stack(
                 children: [
@@ -652,9 +849,24 @@ class _HomeProductCardState extends State<_HomeProductCard> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Image.asset(product.image, fit: BoxFit.contain),
+
+                    child: Image.asset(
+                      product.image,
+                      fit: BoxFit.contain,
+
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 50,
+                            color: Colors.black26,
+                          ),
+                        );
+                      },
+                    ),
                   ),
 
+                  // VEGAN BADGE
                   if (product.vegan)
                     const Positioned(
                       top: 10,
@@ -662,6 +874,7 @@ class _HomeProductCardState extends State<_HomeProductCard> {
                       child: Badge(text: 'Vegan', color: Color(0xFF167C59)),
                     ),
 
+                  // NEW ARRIVAL BADGE
                   if (product.newArrival)
                     const Positioned(
                       top: 66,
@@ -674,6 +887,9 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 12),
 
+            // ===============================
+            // PRODUCT NAME
+            // ===============================
             Text(
               product.name,
               textAlign: TextAlign.center,
@@ -684,6 +900,9 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 5),
 
+            // ===============================
+            // BRAND
+            // ===============================
             Text(
               product.brand,
               textAlign: TextAlign.center,
@@ -697,6 +916,9 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 5),
 
+            // ===============================
+            // RATING
+            // ===============================
             Text(
               product.rating,
               textAlign: TextAlign.center,
@@ -709,6 +931,9 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 4),
 
+            // ===============================
+            // PRICE
+            // ===============================
             Text(
               product.price,
               textAlign: TextAlign.center,
@@ -721,11 +946,17 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 8),
 
+            // ===============================
+            // VIEW DETAILS
+            // ===============================
             OutlinedButton(
               onPressed: widget.onTap,
               child: const Text('VIEW DETAILS'),
             ),
 
+            // ===============================
+            // ADD TO CART
+            // ===============================
             if (!product.soldOut)
               TextButton(
                 onPressed: widget.onAddToCart,

@@ -1,8 +1,8 @@
-
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
 // ============================================================
 // REGISTER
@@ -45,7 +45,6 @@ const registerUser = async (req, res) => {
     });
   }
 };
-
 
 // ============================================================
 // LOGIN
@@ -100,7 +99,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-
 // ============================================================
 // GET LOGGED-IN USER PROFILE
 // ============================================================
@@ -125,7 +123,6 @@ const getProfile = async (req, res) => {
     });
   }
 };
-
 
 // ============================================================
 // UPDATE LOGGED-IN USER PROFILE
@@ -184,11 +181,99 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// ============================================================
+// FORGOT PASSWORD
+// ============================================================
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+
+    await sendEmail(
+      user.email,
+      "KBeauty BD - Password Reset",
+      `
+        <h2>Password Reset Request</h2>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>This link will expire in 15 minutes.</p>
+      `
+    );
+
+    res.status(200).json({
+      message: "Password reset link sent to your email",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ============================================================
+// RESET PASSWORD
+// ============================================================
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ============================================================
+// EXPORTS
+// ============================================================
 module.exports = {
   registerUser,
   loginUser,
   getProfile,
   updateProfile,
+  forgotPassword,
+  resetPassword,
 };
-

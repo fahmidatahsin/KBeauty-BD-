@@ -25,7 +25,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       body: Stack(
         children: [
-
           Positioned.fill(
             child: Image.asset(
               "assets/images/hero-banner-1.jpg",
@@ -34,9 +33,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
 
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.45),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.45)),
           ),
 
           SafeArea(
@@ -50,13 +47,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   padding: const EdgeInsets.all(30),
 
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.94),
+                    color: Colors.white.withValues(alpha: .94),
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: const [
-                      BoxShadow(
-                        blurRadius: 20,
-                        color: Colors.black26,
-                      )
+                      BoxShadow(blurRadius: 20, color: Colors.black26),
                     ],
                   ),
 
@@ -66,358 +60,352 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Center(
+                          child: Text(
+                            "Checkout",
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1C6A50),
+                            ),
+                          ),
+                        ),
 
-          const Center(
-  child: Text(
-    "Checkout",
-    style: TextStyle(
-      fontSize: 34,
-      fontWeight: FontWeight.bold,
-      color: Color(0xFF1C6A50),
-    ),
-  ),
-),
+                        const SizedBox(height: 35),
 
-const SizedBox(height: 35),
+                        const Text(
+                          "Customer Information",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-const Text(
-  "Customer Information",
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  ),
-),
+                        const SizedBox(height: 20),
 
-const SizedBox(height: 20),
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: "Full Name",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.person),
+                          ),
+                          validator: (value) =>
+                              value!.isEmpty ? "Enter your name" : null,
+                        ),
 
-TextFormField(
-  controller: nameController,
-  decoration: InputDecoration(
-    labelText: "Full Name",
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    prefixIcon: const Icon(Icons.person),
-  ),
-  validator: (value) =>
-      value!.isEmpty ? "Enter your name" : null,
-),
+                        const SizedBox(height: 18),
 
-const SizedBox(height: 18),
+                        TextFormField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            labelText: "Phone Number",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.phone),
+                          ),
+                          validator: (value) =>
+                              value!.isEmpty ? "Enter phone number" : null,
+                        ),
 
-TextFormField(
-  controller: phoneController,
-  keyboardType: TextInputType.phone,
-  decoration: InputDecoration(
-    labelText: "Phone Number",
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    prefixIcon: const Icon(Icons.phone),
-  ),
-  validator: (value) =>
-      value!.isEmpty ? "Enter phone number" : null,
-),
+                        const SizedBox(height: 18),
 
-const SizedBox(height: 18),
+                        TextFormField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: "Email (Optional)",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.email),
+                          ),
+                        ),
 
-TextFormField(
-  controller: emailController,
-  decoration: InputDecoration(
-    labelText: "Email (Optional)",
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    prefixIcon: const Icon(Icons.email),
-  ),
-),
+                        const SizedBox(height: 18),
 
-const SizedBox(height: 18),
+                        TextFormField(
+                          controller: addressController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            labelText: "Shipping Address",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.location_on),
+                          ),
+                          validator: (value) =>
+                              value!.isEmpty ? "Enter address" : null,
+                        ),
 
-TextFormField(
-  controller: addressController,
-  maxLines: 3,
-  decoration: InputDecoration(
-    labelText: "Shipping Address",
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    prefixIcon: const Icon(Icons.location_on),
-  ),
-  validator: (value) =>
-      value!.isEmpty ? "Enter address" : null,
-),
+                        const SizedBox(height: 35),
 
-const SizedBox(height: 35),
+                        const Text(
+                          "Payment Method",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-const Text(
-  "Payment Method",
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  ),
-),
+                        const SizedBox(height: 15),
 
-const SizedBox(height: 15),
+                        RadioListTile(
+                          value: "Cash on Delivery",
+                          groupValue: paymentMethod,
+                          title: const Text("Cash on Delivery"),
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
 
-RadioListTile(
-  value: "Cash on Delivery",
-  groupValue: paymentMethod,
-  title: const Text("Cash on Delivery"),
-  onChanged: (value) {
-    setState(() {
-      paymentMethod = value!;
-    });
-  },
-),
+                        RadioListTile(
+                          value: "bKash",
+                          groupValue: paymentMethod,
+                          title: const Text("bKash"),
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
 
-RadioListTile(
-  value: "bKash",
-  groupValue: paymentMethod,
-  title: const Text("bKash"),
-  onChanged: (value) {
-    setState(() {
-      paymentMethod = value!;
-    });
-  },
-),
+                        RadioListTile(
+                          value: "Nagad",
+                          groupValue: paymentMethod,
+                          title: const Text("Nagad"),
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
 
-RadioListTile(
-  value: "Nagad",
-  groupValue: paymentMethod,
-  title: const Text("Nagad"),
-  onChanged: (value) {
-    setState(() {
-      paymentMethod = value!;
-    });
-  },
-),
+                        RadioListTile(
+                          value: "Credit / Debit Card",
+                          groupValue: paymentMethod,
+                          title: const Text("Credit / Debit Card"),
+                          onChanged: (value) {
+                            setState(() {
+                              paymentMethod = value!;
+                            });
+                          },
+                        ),
 
-RadioListTile(
-  value: "Credit / Debit Card",
-  groupValue: paymentMethod,
-  title: const Text("Credit / Debit Card"),
-  onChanged: (value) {
-    setState(() {
-      paymentMethod = value!;
-    });
-  },
-),
+                        const SizedBox(height: 35),
+                        const Text(
+                          "Order Summary",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-const SizedBox(height: 35),const Text(
-  "Order Summary",
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  ),
-),
+                        const SizedBox(height: 18),
 
-const SizedBox(height: 18),
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
 
-Container(
-  padding: const EdgeInsets.all(18),
-  decoration: BoxDecoration(
-    color: Colors.grey.shade100,
-    borderRadius: BorderRadius.circular(12),
-  ),
+                          child: Column(
+                            children: [
+                              if (cart.items.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Your cart is empty.",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
 
-  child: Column(
-    children: [
+                              ...cart.items.map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 15),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.asset(
+                                          item.product['image'] ?? '',
+                                          width: 65,
+                                          height: 65,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
 
-      if (cart.items.isEmpty)
-        const Padding(
-          padding: EdgeInsets.all(15),
-          child: Text(
-            "Your cart is empty.",
-            style: TextStyle(fontSize: 16),
-          ),
-        ),
+                                      const SizedBox(width: 15),
 
-      ...cart.items.map(
-        (item) => Padding(
-          padding: const EdgeInsets.only(bottom: 15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.product['name'] ?? '',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  item.product['image'] ?? '',
-                  width: 65,
-                  height: 65,
-                  fit: BoxFit.cover,
-                ),
-              ),
+                                            const SizedBox(height: 5),
 
-              const SizedBox(width: 15),
+                                            Text("Quantity: ${item.quantity}"),
 
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                                            Text(
+                                              "৳${item.totalPrice.toStringAsFixed(2)}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
 
-                    Text(
-                      item.product['name'] ?? '',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                              const Divider(height: 35),
 
-                    const SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Subtotal",
+                                    style: TextStyle(fontSize: 17),
+                                  ),
+                                  Text(
+                                    "৳${cart.totalPrice.toStringAsFixed(2)}",
+                                    style: const TextStyle(fontSize: 17),
+                                  ),
+                                ],
+                              ),
 
-                    Text(
-                      "Quantity: ${item.quantity}",
-                    ),
+                              const SizedBox(height: 12),
 
-                    Text(
-                      "৳${item.totalPrice.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+                              const Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Delivery",
+                                    style: TextStyle(fontSize: 17),
+                                  ),
+                                  Text("৳80", style: TextStyle(fontSize: 17)),
+                                ],
+                              ),
 
-      const Divider(height: 35),
+                              const Divider(height: 35),
 
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Subtotal",
-            style: TextStyle(fontSize: 17),
-          ),
-          Text(
-            "৳${cart.totalPrice.toStringAsFixed(2)}",
-            style: const TextStyle(fontSize: 17),
-          ),
-        ],
-      ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "TOTAL",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                    ),
+                                  ),
+                                  Text(
+                                    "৳${(cart.totalPrice + 80).toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                      color: Color(0xFF1C6A50),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
 
-      const SizedBox(height: 12),
+                        const SizedBox(height: 35),
 
-      const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "Delivery",
-            style: TextStyle(fontSize: 17),
-          ),
-          Text(
-            "৳80",
-            style: TextStyle(fontSize: 17),
-          ),
-        ],
-      ),
+                        SizedBox(
+                          width: double.infinity,
 
-      const Divider(height: 35),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1C6A50),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
 
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "TOTAL",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-            ),
-          ),
-          Text(
-            "৳${(cart.totalPrice + 80).toStringAsFixed(2)}",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: Color(0xFF1C6A50),
-            ),
-          ),
-        ],
-      ),
-    ],
-  ),
-),
+                            onPressed: () {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
 
-const SizedBox(height: 35),
+                              if (cart.items.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Your cart is empty."),
+                                  ),
+                                );
 
-SizedBox(
-  width: double.infinity,
+                                return;
+                              }
 
-  child: ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF1C6A50),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
+                              showDialog(
+                                context: context,
 
-    onPressed: () {
+                                builder: (_) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
 
-      if (!_formKey.currentState!.validate()) {
-        return;
-      }
+                                  title: const Text("Order Confirmed 🎉"),
 
-      if (cart.items.isEmpty) {
+                                  content: Text(
+                                    "Thank you ${nameController.text}!\n\n"
+                                    "Your order has been placed successfully.\n\n"
+                                    "Payment Method:\n$paymentMethod",
+                                  ),
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Your cart is empty."),
-          ),
-        );
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        cart.clear();
 
-        return;
-      }
+                                        Navigator.pop(context); // Close dialog
+                                        Navigator.pop(
+                                          context,
+                                        ); // Return to previous page
+                                      },
+                                      child: const Text("OK"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
 
-      showDialog(
-        context: context,
-
-        builder: (_) => AlertDialog(
-
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-
-          title: const Text("Order Confirmed 🎉"),
-
-          content: Text(
-            "Thank you ${nameController.text}!\n\n"
-            "Your order has been placed successfully.\n\n"
-            "Payment Method:\n$paymentMethod",
-          ),
-
-          actions: [
-
-            TextButton(
-              onPressed: () {
-
-                cart.clear();
-
-Navigator.pop(context); // Close dialog
-Navigator.pop(context); // Return to previous page
-
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    },
-
-    child: const Text(
-      "PLACE ORDER",
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  ),
-),                      ],
+                            child: const Text(
+                              "PLACE ORDER",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
