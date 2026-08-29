@@ -33,7 +33,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/auth/admin-login'),
+        Uri.parse('${AuthService.baseUrl}/auth/admin-login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

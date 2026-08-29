@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +6,7 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
 
   // Backend base URL
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'https://kbeauty-bd.onrender.com/api';
 
   // ============================================================
   // SAVE TOKEN
@@ -45,8 +44,7 @@ class AuthService {
 
     return {
       'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty)
-        'Authorization': 'Bearer $token',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
@@ -68,9 +66,7 @@ class AuthService {
       return Map<String, dynamic>.from(data['user']);
     }
 
-    throw Exception(
-      data['message'] ?? 'Failed to load profile',
-    );
+    throw Exception(data['message'] ?? 'Failed to load profile');
   }
 
   // ============================================================
@@ -87,11 +83,7 @@ class AuthService {
     final response = await http.put(
       Uri.parse('$baseUrl/auth/profile'),
       headers: headers,
-      body: jsonEncode({
-        'fullName': fullName,
-        'email': email,
-        'phone': phone,
-      }),
+      body: jsonEncode({'fullName': fullName, 'email': email, 'phone': phone}),
     );
 
     final data = jsonDecode(response.body);
@@ -100,9 +92,7 @@ class AuthService {
       return Map<String, dynamic>.from(data['user']);
     }
 
-    throw Exception(
-      data['message'] ?? 'Failed to update profile',
-    );
+    throw Exception(data['message'] ?? 'Failed to update profile');
   }
 
   // ============================================================
@@ -114,4 +104,3 @@ class AuthService {
     await prefs.remove(_tokenKey);
   }
 }
-

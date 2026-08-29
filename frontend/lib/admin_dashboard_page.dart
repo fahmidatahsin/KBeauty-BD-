@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -254,8 +255,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return result;
       }
 
-      // Some APIs may return brands/categories
-      // using a singular or different key.
       if (endpoint == 'brands' && data['brands'] is List) {
         return data['brands'];
       }
@@ -320,19 +319,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _showAddProductDialog() async {
     try {
       final brands = await _loadProductOptions('brands');
-
       final categories = await _loadProductOptions('categories');
 
       if (!mounted) return;
 
       final nameController = TextEditingController();
-
       final priceController = TextEditingController();
-
       final descriptionController = TextEditingController();
-
       final imageController = TextEditingController();
-
       final stockController = TextEditingController(text: '0');
 
       String? selectedBrand;
@@ -347,10 +341,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return StatefulBuilder(
             builder: (dialogBuildContext, setDialogState) {
               Future<void> saveProduct() async {
-                // ------------------------------------------------
-                // VALIDATION
-                // ------------------------------------------------
-
                 if (nameController.text.trim().isEmpty ||
                     selectedBrand == null ||
                     selectedCategory == null ||
@@ -461,7 +451,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // PRODUCT NAME
                         TextField(
                           controller: nameController,
                           decoration: const InputDecoration(
@@ -472,7 +461,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // BRAND
                         DropdownButtonFormField<String>(
                           initialValue: selectedBrand,
                           decoration: const InputDecoration(
@@ -505,7 +493,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // CATEGORY
                         DropdownButtonFormField<String>(
                           initialValue: selectedCategory,
                           decoration: const InputDecoration(
@@ -538,7 +525,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // PRICE
                         TextField(
                           controller: priceController,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -553,7 +539,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // STOCK
                         TextField(
                           controller: stockController,
                           keyboardType: TextInputType.number,
@@ -565,7 +550,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // DESCRIPTION
                         TextField(
                           controller: descriptionController,
                           maxLines: 3,
@@ -577,7 +561,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // IMAGE
                         TextField(
                           controller: imageController,
                           decoration: const InputDecoration(
@@ -644,7 +627,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _showEditProductDialog(Map<String, dynamic> product) async {
     try {
       final brands = await _loadProductOptions('brands');
-
       final categories = await _loadProductOptions('categories');
 
       if (!mounted) return;
@@ -691,10 +673,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 final price = double.tryParse(priceController.text.trim());
 
                 final stock = int.tryParse(stockController.text.trim());
-
-                // ------------------------------------------------
-                // VALIDATION
-                // ------------------------------------------------
 
                 if (nameController.text.trim().isEmpty ||
                     selectedBrand == null ||
@@ -756,7 +734,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // PRODUCT NAME
                         TextField(
                           controller: nameController,
                           decoration: const InputDecoration(
@@ -767,7 +744,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // BRAND
                         DropdownButtonFormField<String>(
                           initialValue:
                               brands.any(
@@ -805,7 +781,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // CATEGORY
                         DropdownButtonFormField<String>(
                           initialValue:
                               categories.any(
@@ -844,7 +819,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // PRICE
                         TextField(
                           controller: priceController,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -859,7 +833,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // STOCK
                         TextField(
                           controller: stockController,
                           keyboardType: TextInputType.number,
@@ -871,7 +844,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // DESCRIPTION
                         TextField(
                           controller: descriptionController,
                           maxLines: 3,
@@ -883,7 +855,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                         const SizedBox(height: 15),
 
-                        // IMAGE
                         TextField(
                           controller: imageController,
                           decoration: const InputDecoration(
@@ -1135,7 +1106,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             decoration: const BoxDecoration(color: Color(0xFF0969E8)),
             child: Column(
               children: [
-                // LOGO
                 const Padding(
                   padding: EdgeInsets.only(
                     top: 35,
@@ -1156,7 +1126,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // DASHBOARD
                 _sidebarItem(
                   icon: Icons.dashboard_outlined,
                   title: 'Dashboard',
@@ -1166,7 +1135,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
-                // PRODUCTS
                 _sidebarItem(
                   icon: Icons.inventory_2_outlined,
                   title: 'Products',
@@ -1176,7 +1144,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
-                // ORDERS
                 _sidebarItem(
                   icon: Icons.shopping_bag_outlined,
                   title: 'Orders',
@@ -1186,7 +1153,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
-                // USERS
                 _sidebarItem(
                   icon: Icons.people_outline,
                   title: 'Users',
@@ -1198,7 +1164,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                 const Spacer(),
 
-                // LOGOUT
                 Padding(
                   padding: const EdgeInsets.only(
                     left: 20,
@@ -1242,7 +1207,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // FOOTER
                 const Padding(
                   padding: EdgeInsets.only(left: 30, bottom: 25),
                   child: Align(
@@ -1343,18 +1307,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               crossAxisCount: isSmall ? 1 : 3,
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
-              childAspectRatio: isSmall ? 4 : 1.8,
+
+              // FIXED:
+              // stat card height increased slightly
+              childAspectRatio: isSmall ? 4.2 : 2.1,
+
               children: [
                 _statCard(
                   icon: Icons.inventory_2_outlined,
                   title: 'Total Products',
                   value: isLoadingStats ? '...' : totalProducts.toString(),
                 ),
+
                 _statCard(
                   icon: Icons.people_outline,
                   title: 'Total Users',
                   value: isLoadingStats ? '...' : totalUsers.toString(),
                 ),
+
                 _statCard(
                   icon: Icons.payments_outlined,
                   title: 'Total Sales',
@@ -1369,7 +1339,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         const SizedBox(height: 30),
 
+        // ======================================================
         // QUICK ACCESS
+        // ======================================================
         const Text(
           'Quick Access',
           style: TextStyle(
@@ -1388,10 +1360,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+
               crossAxisCount: isSmall ? 1 : 3,
+
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
-              childAspectRatio: isSmall ? 3.2 : 2.5,
+
+              // ==================================================
+              // IMPORTANT FIX
+              // ==================================================
+              //
+              // Previously:
+              // childAspectRatio: isSmall ? 3.2 : 2.5
+              //
+              // That made desktop cards too short and caused:
+              // BOTTOM OVERFLOWED BY 30/50 PIXELS
+              //
+              // New height is larger.
+              //
+              childAspectRatio: isSmall ? 3.5 : 1.95,
+
               children: [
                 _dashboardCard(
                   icon: Icons.inventory_2_outlined,
@@ -1401,6 +1389,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     _changePage('Products');
                   },
                 ),
+
                 _dashboardCard(
                   icon: Icons.shopping_bag_outlined,
                   title: 'Orders',
@@ -1409,6 +1398,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     _changePage('Orders');
                   },
                 ),
+
                 _dashboardCard(
                   icon: Icons.people_outline,
                   title: 'Users',
@@ -1437,7 +1427,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         const SizedBox(height: 15),
 
-        // ADD PRODUCT
         Align(
           alignment: Alignment.centerLeft,
           child: ElevatedButton.icon(
@@ -1494,7 +1483,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             final productId = product['_id']?.toString();
 
             final brand = product['brand'];
-
             final category = product['category'];
 
             final brandName = _entityName(brand);
@@ -1503,7 +1491,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
             return DataRow(
               cells: [
-                // PRODUCT
                 DataCell(
                   SizedBox(
                     width: 220,
@@ -1514,19 +1501,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // BRAND
                 DataCell(Text(brandName)),
 
-                // CATEGORY
                 DataCell(Text(categoryName)),
 
-                // PRICE
                 DataCell(Text('৳${product['price'] ?? 0}')),
 
-                // STOCK
                 DataCell(Text('${product['stock'] ?? 0}')),
 
-                // EDIT
                 DataCell(
                   IconButton(
                     tooltip: 'Edit Product',
@@ -1542,7 +1524,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // DELETE
                 DataCell(
                   IconButton(
                     tooltip: 'Delete Product',
@@ -1614,9 +1595,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return DataRow(
               cells: [
                 DataCell(Text(user['fullName']?.toString() ?? 'N/A')),
+
                 DataCell(Text(user['email']?.toString() ?? 'N/A')),
+
                 DataCell(Text(user['phone']?.toString() ?? 'N/A')),
+
                 DataCell(Text(user['role']?.toString() ?? 'User')),
+
                 DataCell(
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -1713,10 +1698,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
             return DataRow(
               cells: [
-                // ORDER ID
                 DataCell(Text(shortOrderId)),
 
-                // CUSTOMER
                 DataCell(
                   Text(
                     user is Map
@@ -1727,13 +1710,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // TOTAL
                 DataCell(Text('৳${order['totalAmount'] ?? 0}')),
 
-                // PAYMENT
                 DataCell(Text(order['paymentStatus']?.toString() ?? 'Pending')),
 
-                // STATUS
                 DataCell(
                   DropdownButton<String>(
                     value: currentStatus,
@@ -1754,7 +1734,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
-                // DATE
                 DataCell(Text(_formatDate(order['createdAt']))),
               ],
             );
@@ -1846,6 +1825,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14, color: Colors.black54),
                   ),
 
@@ -1853,6 +1834,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                   Text(
                     value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -1881,13 +1864,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Card(
       color: Colors.white,
       elevation: 2,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          // ====================================================
+          // FIX:
+          // reduced vertical padding from 20 to 16
+          // ====================================================
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 55,
@@ -1899,28 +1888,34 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 child: Icon(icon, size: 30, color: const Color(0xFF0969E8)),
               ),
 
-              const SizedBox(width: 18),
+              const SizedBox(width: 16),
 
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 19,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: Colors.black87,
                       ),
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
 
                     Text(
                       subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
+                        height: 1.25,
                         color: Colors.black54,
                       ),
                     ),
@@ -1928,9 +1923,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               ),
 
+              const SizedBox(width: 8),
+
               const Icon(
                 Icons.arrow_forward_ios,
-                size: 18,
+                size: 16,
                 color: Colors.black45,
               ),
             ],
@@ -2045,7 +2042,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-
                 onConfirm();
               },
               style: ElevatedButton.styleFrom(

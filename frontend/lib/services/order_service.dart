@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../auth_service.dart';
 
 class OrderService {
-  static const String baseUrl = 'http://localhost:5000/api/orders';
+  static const String baseUrl = 'https://kbeauty-bd.onrender.com/api/orders';
 
   static Future<Map<String, dynamic>> placeOrder({
     required String customerName,
