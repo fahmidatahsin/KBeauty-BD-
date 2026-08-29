@@ -95,8 +95,8 @@ exports.getDashboardStats = async (req, res) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
-  .populate("brand")
-  .populate("category");
+  .populate("brand", "name")
+  .populate("category", "name");
 
     res.status(200).json({
       products,

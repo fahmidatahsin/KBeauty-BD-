@@ -33,7 +33,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   try {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/api/auth/admin-login'),
+      Uri.parse(
+        'http://localhost:5000/api/auth/admin-login',
+      ),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -50,21 +52,31 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     if (response.statusCode == 200) {
       final token = data['token'];
 
-      if (token != null && token.toString().isNotEmpty) {
-        await AuthService.saveToken(token.toString());
+      if (token == null || token.toString().isEmpty) {
+        _showMessage('Admin login failed: token not received.');
+        return;
       }
 
-      Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (_) => const AdminDashboardPage(),
-  ),
-);
+      // Save the admin JWT.
+      await AuthService.saveToken(
+        token.toString(),
+      );
 
-      
+      if (!mounted) return;
+
+      // IMPORTANT:
+      // Go directly to the admin dashboard.
+      // Do not pop back to the customer login/homepage.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const AdminDashboardPage(),
+        ),
+        (route) => false,
+      );
     } else {
       _showMessage(
-        data['message'] ?? 'Invalid admin email or password.',
+        data['message'] ??
+            'Invalid admin email or password.',
       );
     }
   } catch (e) {

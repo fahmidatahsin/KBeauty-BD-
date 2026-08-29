@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,12 +9,10 @@ class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
   @override
-  State<AdminDashboardPage> createState() =>
-      _AdminDashboardPageState();
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
 }
 
-class _AdminDashboardPageState
-    extends State<AdminDashboardPage> {
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // ============================================================
   // CURRENT PAGE
   // ============================================================
@@ -58,6 +56,8 @@ class _AdminDashboardPageState
   // ============================================================
 
   Future<void> _loadDashboardStats() async {
+    if (!mounted) return;
+
     setState(() {
       isLoadingStats = true;
       errorMessage = null;
@@ -76,15 +76,22 @@ class _AdminDashboardPageState
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
+
         setState(() {
-          totalProducts =
-              data['totalProducts'] ?? 0;
+          totalProducts = data['totalProducts'] ?? 0;
+          totalUsers = data['totalUsers'] ?? 0;
 
-          totalUsers =
-              data['totalUsers'] ?? 0;
+          final sales = data['totalSales'];
 
-          totalSales =
-              (data['totalSales'] ?? 0).toDouble();
+          if (sales is num) {
+            totalSales = sales.toDouble();
+          } else {
+            totalSales = double.tryParse(
+                  sales?.toString() ?? '0',
+                ) ??
+                0;
+          }
 
           isLoadingStats = false;
         });
@@ -95,6 +102,8 @@ class _AdminDashboardPageState
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoadingStats = false;
         errorMessage = e.toString();
@@ -107,14 +116,15 @@ class _AdminDashboardPageState
   // ============================================================
 
   Future<void> _loadUsers() async {
+    if (!mounted) return;
+
     setState(() {
       isLoadingTable = true;
       errorMessage = null;
     });
 
     try {
-      final headers =
-          await AuthService.getAuthHeaders();
+      final headers = await AuthService.getAuthHeaders();
 
       final response = await http.get(
         Uri.parse(
@@ -126,17 +136,20 @@ class _AdminDashboardPageState
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
+
         setState(() {
           users = data['users'] ?? [];
           isLoadingTable = false;
         });
       } else {
         throw Exception(
-          data['message'] ??
-              'Failed to load users',
+          data['message'] ?? 'Failed to load users',
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoadingTable = false;
         errorMessage = e.toString();
@@ -149,14 +162,15 @@ class _AdminDashboardPageState
   // ============================================================
 
   Future<void> _loadProducts() async {
+    if (!mounted) return;
+
     setState(() {
       isLoadingTable = true;
       errorMessage = null;
     });
 
     try {
-      final headers =
-          await AuthService.getAuthHeaders();
+      final headers = await AuthService.getAuthHeaders();
 
       final response = await http.get(
         Uri.parse(
@@ -168,17 +182,20 @@ class _AdminDashboardPageState
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
+
         setState(() {
           products = data['products'] ?? [];
           isLoadingTable = false;
         });
       } else {
         throw Exception(
-          data['message'] ??
-              'Failed to load products',
+          data['message'] ?? 'Failed to load products',
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoadingTable = false;
         errorMessage = e.toString();
@@ -187,10 +204,1063 @@ class _AdminDashboardPageState
   }
 
   // ============================================================
+  // ENTITY NAME
+  // ============================================================
+
+  String _entityName(dynamic value) {
+    if (value is Map) {
+      return value['name']?.toString() ??
+          value['title']?.toString() ??
+          'N/A';
+    }
+
+    final text = value?.toString().trim();
+
+    if (text != null && text.isNotEmpty) {
+      return text;
+    }
+
+    return 'N/A';
+  }
+
+  // ============================================================
+  // REFERENCE ID
+  // ============================================================
+
+  String? _referenceId(dynamic value) {
+    if (value is Map) {
+      return value['_id']?.toString() ??
+          value['id']?.toString();
+    }
+
+    final id = value?.toString().trim();
+
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+
+    return id;
+  }
+
+  // ============================================================
+  // LOAD PRODUCT OPTIONS
+  // ============================================================
+
+  Future<List<dynamic>> _loadProductOptions(
+    String endpoint,
+  ) async {
+    final headers = await AuthService.getAuthHeaders();
+
+    final response = await http.get(
+      Uri.parse(
+        '${AuthService.baseUrl}/$endpoint',
+      ),
+      headers: headers,
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        data['message'] ??
+            'Failed to load $endpoint',
+      );
+    }
+
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map) {
+      final result = data[endpoint];
+
+      if (result is List) {
+        return result;
+      }
+
+      // Some APIs may return brands/categories
+      // using a singular or different key.
+      if (endpoint == 'brands' &&
+          data['brands'] is List) {
+        return data['brands'];
+      }
+
+      if (endpoint == 'categories' &&
+          data['categories'] is List) {
+        return data['categories'];
+      }
+    }
+
+    return [];
+  }
+
+  // ============================================================
+  // UPDATE PRODUCT
+  // ============================================================
+
+  Future<bool> _updateProduct(
+    String id,
+    Map<String, dynamic> changes, {
+    String successMessage =
+        'Product updated successfully',
+  }) async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+
+      final response = await http.put(
+        Uri.parse(
+          '${AuthService.baseUrl}/admin/products/$id',
+        ),
+        headers: headers,
+        body: jsonEncode(changes),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          data['message'] ??
+              'Failed to update product',
+        );
+      }
+
+      await _loadProducts();
+      await _loadDashboardStats();
+
+      if (!mounted) return true;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(successMessage),
+        ),
+      );
+
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+
+      return false;
+    }
+  }
+
+  // ============================================================
+  // ADD PRODUCT
+  // ============================================================
+
+  Future<void> _showAddProductDialog() async {
+    try {
+      final brands =
+          await _loadProductOptions('brands');
+
+      final categories =
+          await _loadProductOptions('categories');
+
+      if (!mounted) return;
+
+      final nameController =
+          TextEditingController();
+
+      final priceController =
+          TextEditingController();
+
+      final descriptionController =
+          TextEditingController();
+
+      final imageController =
+          TextEditingController();
+
+      final stockController =
+          TextEditingController(text: '0');
+
+      String? selectedBrand;
+      String? selectedCategory;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          bool isSaving = false;
+
+          return StatefulBuilder(
+            builder: (
+              dialogBuildContext,
+              setDialogState,
+            ) {
+              Future<void> saveProduct() async {
+                // ------------------------------------------------
+                // VALIDATION
+                // ------------------------------------------------
+
+                if (nameController.text
+                        .trim()
+                        .isEmpty ||
+                    selectedBrand == null ||
+                    selectedCategory == null ||
+                    priceController.text
+                        .trim()
+                        .isEmpty ||
+                    descriptionController.text
+                        .trim()
+                        .isEmpty ||
+                    imageController.text
+                        .trim()
+                        .isEmpty) {
+                  ScaffoldMessenger.of(
+                    dialogBuildContext,
+                  ).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please fill in all required fields.',
+                      ),
+                    ),
+                  );
+
+                  return;
+                }
+
+                final price =
+                    double.tryParse(
+                  priceController.text.trim(),
+                );
+
+                final stock =
+                    int.tryParse(
+                  stockController.text.trim(),
+                );
+
+                if (price == null ||
+                    price < 0) {
+                  ScaffoldMessenger.of(
+                    dialogBuildContext,
+                  ).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please enter a valid price.',
+                      ),
+                    ),
+                  );
+
+                  return;
+                }
+
+                if (stock == null ||
+                    stock < 0) {
+                  ScaffoldMessenger.of(
+                    dialogBuildContext,
+                  ).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Stock must be a non-negative whole number.',
+                      ),
+                    ),
+                  );
+
+                  return;
+                }
+
+                setDialogState(() {
+                  isSaving = true;
+                });
+
+                try {
+                  final headers =
+                      await AuthService
+                          .getAuthHeaders();
+
+                  final response =
+                      await http.post(
+                    Uri.parse(
+                      '${AuthService.baseUrl}/products',
+                    ),
+                    headers: headers,
+                    body: jsonEncode({
+                      'name':
+                          nameController.text.trim(),
+                      'brand':
+                          selectedBrand,
+                      'category':
+                          selectedCategory,
+                      'price': price,
+                      'description':
+                          descriptionController
+                              .text
+                              .trim(),
+                      'image':
+                          imageController.text
+                              .trim(),
+                      'stock': stock,
+                    }),
+                  );
+
+                  final data =
+                      jsonDecode(response.body);
+
+                  if (response.statusCode !=
+                      201) {
+                    throw Exception(
+                      data['message'] ??
+                          'Failed to add product',
+                    );
+                  }
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(
+                      dialogContext,
+                    );
+                  }
+
+                  await _loadProducts();
+                  await _loadDashboardStats();
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Product added successfully',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  if (!dialogBuildContext
+                      .mounted) {
+                    return;
+                  }
+
+                  setDialogState(() {
+                    isSaving = false;
+                  });
+
+                  ScaffoldMessenger.of(
+                    dialogBuildContext,
+                  ).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceFirst(
+                              'Exception: ',
+                              '',
+                            ),
+                      ),
+                    ),
+                  );
+                }
+              }
+
+              return AlertDialog(
+                title: const Text(
+                  'Add Product',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: SizedBox(
+                  width: 500,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min,
+                      children: [
+                        // PRODUCT NAME
+                        TextField(
+                          controller:
+                              nameController,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Product Name',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // BRAND
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue: selectedBrand,
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Brand',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                          items: brands
+    .map((brand) {
+      final id = _referenceId(brand);
+
+      if (id == null) {
+        return null;
+      }
+
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(_entityName(brand)),
+      );
+    })
+    .whereType<DropdownMenuItem<String>>()
+    .toList(),
+                          onChanged:
+                              isSaving
+                                  ? null
+                                  : (value) {
+                                      setDialogState(
+                                        () {
+                                          selectedBrand =
+                                              value;
+                                        },
+                                      );
+                                    },
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // CATEGORY
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue:
+                              selectedCategory,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Category',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                          items: categories
+    .map((category) {
+      final id = _referenceId(category);
+
+      if (id == null) {
+        return null;
+      }
+
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(_entityName(category)),
+      );
+    })
+    .whereType<DropdownMenuItem<String>>()
+    .toList(),
+                          onChanged:
+                              isSaving
+                                  ? null
+                                  : (value) {
+                                      setDialogState(
+                                        () {
+                                          selectedCategory =
+                                              value;
+                                        },
+                                      );
+                                    },
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // PRICE
+                        TextField(
+                          controller:
+                              priceController,
+                          keyboardType:
+                              const TextInputType
+                                  .numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Price',
+                            prefixText: '৳ ',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // STOCK
+                        TextField(
+                          controller:
+                              stockController,
+                          keyboardType:
+                              TextInputType.number,
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Stock',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // DESCRIPTION
+                        TextField(
+                          controller:
+                              descriptionController,
+                          maxLines: 3,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Description',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // IMAGE
+                        TextField(
+                          controller:
+                              imageController,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Image URL',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isSaving
+                        ? null
+                        : () {
+                            Navigator.pop(
+                              dialogContext,
+                            );
+                          },
+                    child:
+                        const Text('Cancel'),
+                  ),
+
+                  ElevatedButton(
+                    onPressed:
+                        isSaving
+                            ? null
+                            : saveProduct,
+                    style:
+                        ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(
+                              0xFF0969E8),
+                      foregroundColor:
+                          Colors.white,
+                    ),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color:
+                                  Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Add Product',
+                          ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      nameController.dispose();
+      priceController.dispose();
+      descriptionController.dispose();
+      imageController.dispose();
+      stockController.dispose();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // EDIT PRODUCT
+  // ============================================================
+
+  Future<void> _showEditProductDialog(
+    Map<String, dynamic> product,
+  ) async {
+    try {
+      final brands =
+          await _loadProductOptions('brands');
+
+      final categories =
+          await _loadProductOptions('categories');
+
+      if (!mounted) return;
+
+      final productId =
+          product['_id']?.toString();
+
+      if (productId == null ||
+          productId.isEmpty) {
+        throw Exception(
+          'Product ID not found',
+        );
+      }
+
+      final nameController =
+          TextEditingController(
+        text:
+            product['name']?.toString() ?? '',
+      );
+
+      final priceController =
+          TextEditingController(
+        text:
+            product['price']?.toString() ?? '',
+      );
+
+      final descriptionController =
+          TextEditingController(
+        text:
+            product['description']
+                    ?.toString() ??
+                '',
+      );
+
+      final imageController =
+          TextEditingController(
+        text:
+            product['image']?.toString() ??
+                '',
+      );
+
+      final stockController =
+          TextEditingController(
+        text:
+            product['stock']?.toString() ??
+                '0',
+      );
+
+      String? selectedBrand =
+          _referenceId(product['brand']);
+
+      String? selectedCategory =
+          _referenceId(product['category']);
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          bool isSaving = false;
+
+          return StatefulBuilder(
+            builder: (
+              dialogBuildContext,
+              setDialogState,
+            ) {
+              Future<void> saveChanges() async {
+                final price =
+                    double.tryParse(
+                  priceController.text.trim(),
+                );
+
+                final stock =
+                    int.tryParse(
+                  stockController.text.trim(),
+                );
+
+                // ------------------------------------------------
+                // VALIDATION
+                // ------------------------------------------------
+
+                if (nameController.text
+                        .trim()
+                        .isEmpty ||
+                    selectedBrand == null ||
+                    selectedCategory == null ||
+                    price == null ||
+                    price < 0 ||
+                    descriptionController.text
+                        .trim()
+                        .isEmpty ||
+                    imageController.text
+                        .trim()
+                        .isEmpty ||
+                    stock == null ||
+                    stock < 0) {
+                  ScaffoldMessenger.of(
+                    dialogBuildContext,
+                  ).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please enter valid product information.',
+                      ),
+                    ),
+                  );
+
+                  return;
+                }
+
+                setDialogState(() {
+                  isSaving = true;
+                });
+
+                final success =
+                    await _updateProduct(
+                  productId,
+                  {
+                    'name':
+                        nameController.text
+                            .trim(),
+                    'brand':
+                        selectedBrand,
+                    'category':
+                        selectedCategory,
+                    'price':
+                        price,
+                    'description':
+                        descriptionController
+                            .text
+                            .trim(),
+                    'image':
+                        imageController.text
+                            .trim(),
+                    'stock':
+                        stock,
+                  },
+                  successMessage:
+                      'Product updated successfully',
+                );
+
+                if (!success) {
+                  if (!dialogBuildContext
+                      .mounted) {
+                    return;
+                  }
+
+                  setDialogState(() {
+                    isSaving = false;
+                  });
+
+                  return;
+                }
+
+                if (dialogContext.mounted) {
+                  Navigator.pop(
+                    dialogContext,
+                  );
+                }
+              }
+
+              return AlertDialog(
+                title: const Text(
+                  'Edit Product',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: SizedBox(
+                  width: 500,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min,
+                      children: [
+                        // PRODUCT NAME
+                        TextField(
+                          controller:
+                              nameController,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Product Name',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // BRAND
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue: brands.any(
+                            (brand) =>
+                                _referenceId(
+                                  brand,
+                                ) ==
+                                selectedBrand,
+                          )
+                              ? selectedBrand
+                              : null,
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Brand',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                         items: brands
+    .map((brand) {
+      final id = _referenceId(brand);
+
+      if (id == null) {
+        return null;
+      }
+
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(_entityName(brand)),
+      );
+    })
+    .whereType<DropdownMenuItem<String>>()
+    .toList(),
+                          onChanged:
+                              isSaving
+                                  ? null
+                                  : (value) {
+                                      setDialogState(
+                                        () {
+                                          selectedBrand =
+                                              value;
+                                        },
+                                      );
+                                    },
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // CATEGORY
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue:
+                              categories.any(
+                            (category) =>
+                                _referenceId(
+                                  category,
+                                ) ==
+                                selectedCategory,
+                          )
+                                  ? selectedCategory
+                                  : null,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Category',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                          items: categories
+    .map((category) {
+      final id = _referenceId(category);
+
+      if (id == null) {
+        return null;
+      }
+
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(_entityName(category)),
+      );
+    })
+    .whereType<DropdownMenuItem<String>>()
+    .toList(),
+                          onChanged:
+                              isSaving
+                                  ? null
+                                  : (value) {
+                                      setDialogState(
+                                        () {
+                                          selectedCategory =
+                                              value;
+                                        },
+                                      );
+                                    },
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // PRICE
+                        TextField(
+                          controller:
+                              priceController,
+                          keyboardType:
+                              const TextInputType
+                                  .numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Price',
+                            prefixText: '৳ ',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // STOCK
+                        TextField(
+                          controller:
+                              stockController,
+                          keyboardType:
+                              TextInputType.number,
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Stock',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // DESCRIPTION
+                        TextField(
+                          controller:
+                              descriptionController,
+                          maxLines: 3,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Description',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 15),
+
+                        // IMAGE
+                        TextField(
+                          controller:
+                              imageController,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Image URL',
+                            border:
+                                OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isSaving
+                        ? null
+                        : () {
+                            Navigator.pop(
+                              dialogContext,
+                            );
+                          },
+                    child:
+                        const Text('Cancel'),
+                  ),
+
+                  ElevatedButton(
+                    onPressed:
+                        isSaving
+                            ? null
+                            : saveChanges,
+                    style:
+                        ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(
+                              0xFF0969E8),
+                      foregroundColor:
+                          Colors.white,
+                    ),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color:
+                                  Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Save Changes',
+                          ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      nameController.dispose();
+      priceController.dispose();
+      descriptionController.dispose();
+      imageController.dispose();
+      stockController.dispose();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
   // LOAD ORDERS
   // ============================================================
 
   Future<void> _loadOrders() async {
+    if (!mounted) return;
+
     setState(() {
       isLoadingTable = true;
       errorMessage = null;
@@ -210,6 +1280,8 @@ class _AdminDashboardPageState
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
+
         setState(() {
           orders = data['orders'] ?? [];
           isLoadingTable = false;
@@ -221,6 +1293,8 @@ class _AdminDashboardPageState
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoadingTable = false;
         errorMessage = e.toString();
@@ -271,15 +1345,15 @@ class _AdminDashboardPageState
         await _loadUsers();
         await _loadDashboardStats();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            const SnackBar(
-              content:
-                  Text('User deleted successfully'),
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'User deleted successfully',
             ),
-          );
-        }
+          ),
+        );
       } else {
         throw Exception(
           data['message'] ??
@@ -287,14 +1361,18 @@ class _AdminDashboardPageState
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -320,15 +1398,15 @@ class _AdminDashboardPageState
         await _loadProducts();
         await _loadDashboardStats();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Product deleted successfully'),
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Product deleted successfully',
             ),
-          );
-        }
+          ),
+        );
       } else {
         throw Exception(
           data['message'] ??
@@ -336,14 +1414,18 @@ class _AdminDashboardPageState
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -375,15 +1457,15 @@ class _AdminDashboardPageState
         await _loadOrders();
         await _loadDashboardStats();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Order status updated'),
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Order status updated',
             ),
-          );
-        }
+          ),
+        );
       } else {
         throw Exception(
           data['message'] ??
@@ -391,14 +1473,18 @@ class _AdminDashboardPageState
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -411,13 +1497,11 @@ class _AdminDashboardPageState
     return Scaffold(
       backgroundColor:
           const Color(0xFFF5F7FA),
-
       body: Row(
         children: [
-
-          // =====================================================
+          // ======================================================
           // LEFT SIDEBAR
-          // =====================================================
+          // ======================================================
 
           Container(
             width: 250,
@@ -425,10 +1509,8 @@ class _AdminDashboardPageState
             decoration: const BoxDecoration(
               color: Color(0xFF0969E8),
             ),
-
             child: Column(
               children: [
-
                 // LOGO
                 const Padding(
                   padding: EdgeInsets.only(
@@ -462,7 +1544,8 @@ class _AdminDashboardPageState
                           'Dashboard',
                   onTap: () {
                     _changePage(
-                        'Dashboard');
+                      'Dashboard',
+                    );
                   },
                 ),
 
@@ -476,7 +1559,8 @@ class _AdminDashboardPageState
                           'Products',
                   onTap: () {
                     _changePage(
-                        'Products');
+                      'Products',
+                    );
                   },
                 ),
 
@@ -490,7 +1574,8 @@ class _AdminDashboardPageState
                           'Orders',
                   onTap: () {
                     _changePage(
-                        'Orders');
+                      'Orders',
+                    );
                   },
                 ),
 
@@ -504,7 +1589,8 @@ class _AdminDashboardPageState
                           'Users',
                   onTap: () {
                     _changePage(
-                        'Users');
+                      'Users',
+                    );
                   },
                 ),
 
@@ -520,14 +1606,22 @@ class _AdminDashboardPageState
                   ),
                   child: InkWell(
                     borderRadius:
-                        BorderRadius.circular(8),
+                        BorderRadius.circular(
+                      8,
+                    ),
                     onTap: () async {
                       await AuthService.logout();
 
-                      if (mounted) {
-                        Navigator.pop(
-                            context);
-                      }
+if (!context.mounted) {
+  return;
+}
+
+Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(
+    builder: (_) => const HomePage(),
+  ),
+  (route) => false,
+);
                     },
                     child: Container(
                       padding:
@@ -544,8 +1638,7 @@ class _AdminDashboardPageState
                                 Colors.white,
                             size: 21,
                           ),
-                          SizedBox(
-                              width: 15),
+                          SizedBox(width: 15),
                           Text(
                             'Logout',
                             style: TextStyle(
@@ -604,9 +1697,9 @@ class _AdminDashboardPageState
             ),
           ),
 
-          // =====================================================
+          // ======================================================
           // RIGHT SIDE
-          // =====================================================
+          // ======================================================
 
           Expanded(
             child:
@@ -651,7 +1744,6 @@ class _AdminDashboardPageState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
         const Text(
           'Welcome Admin 👋',
           style: TextStyle(
@@ -682,8 +1774,7 @@ class _AdminDashboardPageState
           builder:
               (context, constraints) {
             final isSmall =
-                constraints.maxWidth <
-                    800;
+                constraints.maxWidth < 800;
 
             return GridView.count(
               shrinkWrap: true,
@@ -696,7 +1787,6 @@ class _AdminDashboardPageState
               childAspectRatio:
                   isSmall ? 4 : 1.8,
               children: [
-
                 _statCard(
                   icon:
                       Icons.inventory_2_outlined,
@@ -708,7 +1798,6 @@ class _AdminDashboardPageState
                           : totalProducts
                               .toString(),
                 ),
-
                 _statCard(
                   icon:
                       Icons.people_outline,
@@ -720,7 +1809,6 @@ class _AdminDashboardPageState
                           : totalUsers
                               .toString(),
                 ),
-
                 _statCard(
                   icon:
                       Icons.payments_outlined,
@@ -756,8 +1844,7 @@ class _AdminDashboardPageState
           builder:
               (context, constraints) {
             final isSmall =
-                constraints.maxWidth <
-                    700;
+                constraints.maxWidth < 700;
 
             return GridView.count(
               shrinkWrap: true,
@@ -770,7 +1857,6 @@ class _AdminDashboardPageState
               childAspectRatio:
                   isSmall ? 3.2 : 2.5,
               children: [
-
                 _dashboardCard(
                   icon:
                       Icons.inventory_2_outlined,
@@ -779,10 +1865,10 @@ class _AdminDashboardPageState
                       'Manage products',
                   onTap: () {
                     _changePage(
-                        'Products');
+                      'Products',
+                    );
                   },
                 ),
-
                 _dashboardCard(
                   icon:
                       Icons.shopping_bag_outlined,
@@ -791,10 +1877,10 @@ class _AdminDashboardPageState
                       'View and manage orders',
                   onTap: () {
                     _changePage(
-                        'Orders');
+                      'Orders',
+                    );
                   },
                 ),
-
                 _dashboardCard(
                   icon:
                       Icons.people_outline,
@@ -803,7 +1889,8 @@ class _AdminDashboardPageState
                       'View registered users',
                   onTap: () {
                     _changePage(
-                        'Users');
+                      'Users',
+                    );
                   },
                 ),
               ],
@@ -823,10 +1910,45 @@ class _AdminDashboardPageState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
         _pageHeader(
           'Products',
           'All products in your database',
+        ),
+
+        const SizedBox(height: 15),
+
+        // ADD PRODUCT
+        Align(
+          alignment:
+              Alignment.centerLeft,
+          child: ElevatedButton.icon(
+            onPressed:
+                _showAddProductDialog,
+            icon:
+                const Icon(Icons.add),
+            label:
+                const Text('Add Product'),
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor:
+                  const Color(0xFF0969E8),
+              foregroundColor:
+                  Colors.white,
+              padding:
+                  const EdgeInsets
+                      .symmetric(
+                horizontal: 20,
+                vertical: 14,
+              ),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
+                  8,
+                ),
+              ),
+            ),
+          ),
         ),
 
         const SizedBox(height: 25),
@@ -839,7 +1961,9 @@ class _AdminDashboardPageState
         else if (errorMessage != null)
           _errorBox()
         else if (products.isEmpty)
-          _emptyBox('No products found.')
+          _emptyBox(
+            'No products found.',
+          )
         else
           _buildProductsTable(),
       ],
@@ -859,7 +1983,8 @@ class _AdminDashboardPageState
         borderRadius:
             BorderRadius.circular(12),
       ),
-      child: SingleChildScrollView(
+      child:
+          SingleChildScrollView(
         scrollDirection:
             Axis.horizontal,
         child: DataTable(
@@ -880,88 +2005,128 @@ class _AdminDashboardPageState
               label: Text('Stock'),
             ),
             DataColumn(
-              label: Text('Action'),
+              label: Text('Edit'),
+            ),
+            DataColumn(
+              label: Text('Delete'),
             ),
           ],
-          rows: products.map((product) {
+          rows: products.map(
+            (product) {
+              final productId =
+                  product['_id']?.toString();
 
-            final brand =
-                product['brand'];
+              final brand =
+                  product['brand'];
 
-            final category =
-                product['category'];
+              final category =
+                  product['category'];
 
-            return DataRow(
-              cells: [
+              final brandName =
+                  _entityName(brand);
 
-                DataCell(
-                  Text(
-                    product['name']
-                            ?.toString() ??
-                        'N/A',
-                  ),
-                ),
+              final categoryName =
+                  _entityName(category);
 
-                DataCell(
-                  Text(
-                    brand is Map
-                        ? brand['name']
+              return DataRow(
+                cells: [
+                  // PRODUCT
+                  DataCell(
+                    SizedBox(
+                      width: 220,
+                      child: Text(
+                        product['name']
                                 ?.toString() ??
-                            'N/A'
-                        : 'N/A',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    category is Map
-                        ? category['name']
-                                ?.toString() ??
-                            'N/A'
-                        : 'N/A',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    '৳${product['price'] ?? 0}',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    '${product['stock'] ?? 0}',
-                  ),
-                ),
-
-                DataCell(
-                  IconButton(
-                    icon:
-                        const Icon(
-                      Icons.delete_outline,
-                      color:
-                          Colors.red,
+                            'N/A',
+                        overflow:
+                            TextOverflow.ellipsis,
+                      ),
                     ),
-                    onPressed: () {
-                      final id =
-                          product['_id']
-                              ?.toString();
-
-                      if (id != null) {
-                        _confirmDelete(
-                          context,
-                          'Delete Product',
-                          'Are you sure you want to delete this product?',
-                          () =>
-                              _deleteProduct(id),
-                        );
-                      }
-                    },
                   ),
-                ),
-              ],
-            );
-          }).toList(),
+
+                  // BRAND
+                  DataCell(
+                    Text(brandName),
+                  ),
+
+                  // CATEGORY
+                  DataCell(
+                    Text(categoryName),
+                  ),
+
+                  // PRICE
+                  DataCell(
+                    Text(
+                      '৳${product['price'] ?? 0}',
+                    ),
+                  ),
+
+                  // STOCK
+                  DataCell(
+                    Text(
+                      '${product['stock'] ?? 0}',
+                    ),
+                  ),
+
+                  // EDIT
+                  DataCell(
+                    IconButton(
+                      tooltip:
+                          'Edit Product',
+                      icon:
+                          const Icon(
+                        Icons
+                            .edit_outlined,
+                        color:
+                            Color(
+                          0xFF0969E8,
+                        ),
+                      ),
+                      onPressed:
+                          productId ==
+                                  null
+                              ? null
+                              : () {
+                                  _showEditProductDialog(
+                                    product,
+                                  );
+                                },
+                    ),
+                  ),
+
+                  // DELETE
+                  DataCell(
+                    IconButton(
+                      tooltip:
+                          'Delete Product',
+                      icon:
+                          const Icon(
+                        Icons
+                            .delete_outline,
+                        color:
+                            Colors.red,
+                      ),
+                      onPressed:
+                          productId ==
+                                  null
+                              ? null
+                              : () {
+                                  _confirmDelete(
+                                    context,
+                                    'Delete Product',
+                                    'Are you sure you want to delete this product?',
+                                    () =>
+                                        _deleteProduct(
+                                      productId,
+                                    ),
+                                  );
+                                },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ).toList(),
         ),
       ),
     );
@@ -976,7 +2141,6 @@ class _AdminDashboardPageState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
         _pageHeader(
           'Users',
           'All registered users',
@@ -992,7 +2156,9 @@ class _AdminDashboardPageState
         else if (errorMessage != null)
           _errorBox()
         else if (users.isEmpty)
-          _emptyBox('No users found.')
+          _emptyBox(
+            'No users found.',
+          )
         else
           _buildUsersTable(),
       ],
@@ -1012,7 +2178,8 @@ class _AdminDashboardPageState
         borderRadius:
             BorderRadius.circular(12),
       ),
-      child: SingleChildScrollView(
+      child:
+          SingleChildScrollView(
         scrollDirection:
             Axis.horizontal,
         child: DataTable(
@@ -1033,72 +2200,70 @@ class _AdminDashboardPageState
               label: Text('Action'),
             ),
           ],
-          rows: users.map((user) {
-
-            return DataRow(
-              cells: [
-
-                DataCell(
-                  Text(
-                    user['fullName']
-                            ?.toString() ??
-                        'N/A',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    user['email']
-                            ?.toString() ??
-                        'N/A',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    user['phone']
-                            ?.toString() ??
-                        'N/A',
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    user['role']
-                            ?.toString() ??
-                        'User',
-                  ),
-                ),
-
-                DataCell(
-                  IconButton(
-                    icon:
-                        const Icon(
-                      Icons.delete_outline,
-                      color:
-                          Colors.red,
+          rows: users.map(
+            (user) {
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Text(
+                      user['fullName']
+                              ?.toString() ??
+                          'N/A',
                     ),
-                    onPressed: () {
-
-                      final id =
-                          user['_id']
-                              ?.toString();
-
-                      if (id != null) {
-                        _confirmDelete(
-                          context,
-                          'Delete User',
-                          'Are you sure you want to delete this user?',
-                          () =>
-                              _deleteUser(id),
-                        );
-                      }
-                    },
                   ),
-                ),
-              ],
-            );
-          }).toList(),
+                  DataCell(
+                    Text(
+                      user['email']
+                              ?.toString() ??
+                          'N/A',
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      user['phone']
+                              ?.toString() ??
+                          'N/A',
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      user['role']
+                              ?.toString() ??
+                          'User',
+                    ),
+                  ),
+                  DataCell(
+                    IconButton(
+                      icon:
+                          const Icon(
+                        Icons
+                            .delete_outline,
+                        color:
+                            Colors.red,
+                      ),
+                      onPressed: () {
+                        final id =
+                            user['_id']
+                                ?.toString();
+
+                        if (id != null) {
+                          _confirmDelete(
+                            context,
+                            'Delete User',
+                            'Are you sure you want to delete this user?',
+                            () =>
+                                _deleteUser(
+                              id,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ).toList(),
         ),
       ),
     );
@@ -1113,7 +2278,6 @@ class _AdminDashboardPageState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
         _pageHeader(
           'Orders',
           'All orders from your database',
@@ -1129,7 +2293,9 @@ class _AdminDashboardPageState
         else if (errorMessage != null)
           _errorBox()
         else if (orders.isEmpty)
-          _emptyBox('No orders found.')
+          _emptyBox(
+            'No orders found.',
+          )
         else
           _buildOrdersTable(),
       ],
@@ -1149,126 +2315,168 @@ class _AdminDashboardPageState
         borderRadius:
             BorderRadius.circular(12),
       ),
-      child: SingleChildScrollView(
+      child:
+          SingleChildScrollView(
         scrollDirection:
             Axis.horizontal,
         child: DataTable(
           columns: const [
             DataColumn(
-              label: Text('Order ID'),
+              label:
+                  Text('Order ID'),
             ),
             DataColumn(
-              label: Text('Customer'),
+              label:
+                  Text('Customer'),
             ),
             DataColumn(
-              label: Text('Total'),
+              label:
+                  Text('Total'),
             ),
             DataColumn(
-              label: Text('Payment'),
+              label:
+                  Text('Payment'),
             ),
             DataColumn(
-              label: Text('Status'),
+              label:
+                  Text('Status'),
             ),
             DataColumn(
-              label: Text('Date'),
+              label:
+                  Text('Date'),
             ),
           ],
-          rows: orders.map((order) {
+          rows: orders.map(
+            (order) {
+              final user =
+                  order['user'];
 
-            final user =
-                order['user'];
+              final orderId =
+                  order['_id']?.toString();
 
-            return DataRow(
-              cells: [
+              String shortOrderId =
+                  'N/A';
 
-                DataCell(
-                  Text(
-                    order['_id']
-                            ?.toString()
-                            .substring(
-                              0,
-                              8,
-                            ) ??
-                        'N/A',
-                  ),
-                ),
+              if (orderId != null &&
+                  orderId.length >= 8) {
+                shortOrderId =
+                    orderId.substring(
+                  0,
+                  8,
+                );
+              }
 
-                DataCell(
-                  Text(
-                    user is Map
-                        ? user['fullName']
-                                ?.toString() ??
-                            user['email']
-                                ?.toString() ??
-                            'N/A'
-                        : 'N/A',
-                  ),
-                ),
+              String currentStatus =
+                  order['status']
+                          ?.toString() ??
+                      'Pending';
 
-                DataCell(
-                  Text(
-                    '৳${order['totalAmount'] ?? 0}',
-                  ),
-                ),
+              const statuses = [
+                'Pending',
+                'Processing',
+                'Shipped',
+                'Delivered',
+                'Cancelled',
+              ];
 
-                DataCell(
-                  Text(
-                    order['paymentStatus']
-                            ?.toString() ??
-                        'Pending',
-                  ),
-                ),
+              if (!statuses.contains(
+                currentStatus,
+              )) {
+                currentStatus =
+                    'Pending';
+              }
 
-                DataCell(
-                  DropdownButton<String>(
-                    value:
-                        order['status']
-                                ?.toString() ??
-                            'Pending',
-                    underline:
-                        const SizedBox(),
-                    items: const [
-                      'Pending',
-                      'Processing',
-                      'Shipped',
-                      'Delivered',
-                      'Cancelled',
-                    ].map(
-                      (status) {
-                        return DropdownMenuItem<
-                            String>(
-                          value: status,
-                          child:
-                              Text(status),
-                        );
-                      },
-                    ).toList(),
-                    onChanged:
-                        (newStatus) {
-
-                      if (newStatus !=
-                          null) {
-
-                        _updateOrderStatus(
-                          order['_id']
-                              .toString(),
-                          newStatus,
-                        );
-                      }
-                    },
-                  ),
-                ),
-
-                DataCell(
-                  Text(
-                    _formatDate(
-                      order['createdAt'],
+              return DataRow(
+                cells: [
+                  // ORDER ID
+                  DataCell(
+                    Text(
+                      shortOrderId,
                     ),
                   ),
-                ),
-              ],
-            );
-          }).toList(),
+
+                  // CUSTOMER
+                  DataCell(
+                    Text(
+                      user is Map
+                          ? user['fullName']
+                                  ?.toString() ??
+                              user['email']
+                                  ?.toString() ??
+                              'N/A'
+                          : 'N/A',
+                    ),
+                  ),
+
+                  // TOTAL
+                  DataCell(
+                    Text(
+                      '৳${order['totalAmount'] ?? 0}',
+                    ),
+                  ),
+
+                  // PAYMENT
+                  DataCell(
+                    Text(
+                      order[
+                                  'paymentStatus']
+                              ?.toString() ??
+                          'Pending',
+                    ),
+                  ),
+
+                  // STATUS
+                  DataCell(
+                    DropdownButton<
+                        String>(
+                      value:
+                          currentStatus,
+                      underline:
+                          const SizedBox(),
+                      items:
+                          statuses.map(
+                        (status) {
+                          return DropdownMenuItem<
+                              String>(
+                            value:
+                                status,
+                            child:
+                                Text(
+                              status,
+                            ),
+                          );
+                        },
+                      ).toList(),
+                      onChanged:
+                          (newStatus) {
+                        if (newStatus ==
+                                null ||
+                            orderId ==
+                                null) {
+                          return;
+                        }
+
+                        _updateOrderStatus(
+                          orderId,
+                          newStatus,
+                        );
+                      },
+                    ),
+                  ),
+
+                  // DATE
+                  DataCell(
+                    Text(
+                      _formatDate(
+                        order[
+                            'createdAt'],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ).toList(),
         ),
       ),
     );
@@ -1308,25 +2516,27 @@ class _AdminDashboardPageState
           ),
           child: Row(
             children: [
-
               Icon(
                 icon,
                 size: 22,
                 color: selected
                     ? const Color(
-                        0xFF0969E8)
+                        0xFF0969E8,
+                      )
                     : Colors.white,
               ),
 
               const SizedBox(
-                  width: 18),
+                width: 18,
+              ),
 
               Text(
                 title,
                 style: TextStyle(
                   color: selected
                       ? const Color(
-                          0xFF0969E8)
+                          0xFF0969E8,
+                        )
                       : Colors.white,
                   fontSize: 15,
                   fontWeight: selected
@@ -1363,7 +2573,6 @@ class _AdminDashboardPageState
             const EdgeInsets.all(20),
         child: Row(
           children: [
-
             Container(
               width: 55,
               height: 55,
@@ -1371,22 +2580,26 @@ class _AdminDashboardPageState
                   BoxDecoration(
                 color:
                     const Color(
-                        0xFFE8F1FF),
+                  0xFFE8F1FF,
+                ),
                 borderRadius:
                     BorderRadius.circular(
-                        10),
+                  10,
+                ),
               ),
               child: Icon(
                 icon,
                 size: 30,
                 color:
                     const Color(
-                        0xFF0969E8),
+                  0xFF0969E8,
+                ),
               ),
             ),
 
             const SizedBox(
-                width: 18),
+              width: 18,
+            ),
 
             Expanded(
               child: Column(
@@ -1397,7 +2610,6 @@ class _AdminDashboardPageState
                     CrossAxisAlignment
                         .start,
                 children: [
-
                   Text(
                     title,
                     style:
@@ -1409,7 +2621,8 @@ class _AdminDashboardPageState
                   ),
 
                   const SizedBox(
-                      height: 5),
+                    height: 5,
+                  ),
 
                   Text(
                     value,
@@ -1419,7 +2632,9 @@ class _AdminDashboardPageState
                       fontWeight:
                           FontWeight.w900,
                       color:
-                          Color(0xFF303030),
+                          Color(
+                        0xFF303030,
+                      ),
                     ),
                   ),
                 ],
@@ -1461,7 +2676,6 @@ class _AdminDashboardPageState
           ),
           child: Row(
             children: [
-
               Container(
                 width: 55,
                 height: 55,
@@ -1469,22 +2683,26 @@ class _AdminDashboardPageState
                     BoxDecoration(
                   color:
                       const Color(
-                          0xFFE8F1FF),
+                    0xFFE8F1FF,
+                  ),
                   borderRadius:
                       BorderRadius.circular(
-                          10),
+                    10,
+                  ),
                 ),
                 child: Icon(
                   icon,
                   size: 30,
                   color:
                       const Color(
-                          0xFF0969E8),
+                    0xFF0969E8,
+                  ),
                 ),
               ),
 
               const SizedBox(
-                  width: 18),
+                width: 18,
+              ),
 
               Expanded(
                 child: Column(
@@ -1495,7 +2713,6 @@ class _AdminDashboardPageState
                       CrossAxisAlignment
                           .start,
                   children: [
-
                     Text(
                       title,
                       style:
@@ -1509,7 +2726,8 @@ class _AdminDashboardPageState
                     ),
 
                     const SizedBox(
-                        height: 5),
+                      height: 5,
+                    ),
 
                     Text(
                       subtitle,
@@ -1550,7 +2768,6 @@ class _AdminDashboardPageState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
         Text(
           title,
           style:
@@ -1581,7 +2798,9 @@ class _AdminDashboardPageState
   // EMPTY BOX
   // ============================================================
 
-  Widget _emptyBox(String message) {
+  Widget _emptyBox(
+    String message,
+  ) {
     return Container(
       width: double.infinity,
       padding:
@@ -1628,13 +2847,14 @@ class _AdminDashboardPageState
       ),
       child: Row(
         children: [
-
           const Icon(
             Icons.error_outline,
             color: Colors.red,
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(
+            width: 10,
+          ),
 
           Expanded(
             child: Text(
@@ -1663,15 +2883,16 @@ class _AdminDashboardPageState
   ) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text(title),
           content: Text(message),
           actions: [
-
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(
+                  dialogContext,
+                );
               },
               child:
                   const Text('Cancel'),
@@ -1679,7 +2900,10 @@ class _AdminDashboardPageState
 
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(
+                  dialogContext,
+                );
+
                 onConfirm();
               },
               style:
@@ -1702,7 +2926,9 @@ class _AdminDashboardPageState
   // FORMAT DATE
   // ============================================================
 
-  String _formatDate(dynamic value) {
+  String _formatDate(
+    dynamic value,
+  ) {
     if (value == null) {
       return 'N/A';
     }
@@ -1721,4 +2947,3 @@ class _AdminDashboardPageState
     }
   }
 }
-

@@ -10,6 +10,7 @@ import 'login_page.dart';
 import 'profile_page.dart';
 import 'product_detail_page.dart';
 import 'services/product_service.dart';
+import 'admin_login_page.dart';
 
 final CartModel appCart = CartModel();
 
@@ -70,29 +71,29 @@ class Product {
   });
 
   factory Product.fromMap(Map<String, dynamic> product) {
-    final dynamic rawPrice = product['price'];
-    final String priceText = rawPrice?.toString() ?? '';
+  final dynamic rawPrice = product['price'];
+  final String priceText = rawPrice?.toString() ?? '';
 
-    return Product(
-      id:
-          product['_id']?.toString() ??
-          product['id']?.toString() ??
-          product['productId']?.toString() ??
-          '',
-      name: product['name']?.toString() ?? '',
-      brand: _getBrandName(product['brand']),
-      price: _formatPrice(priceText),
-      image:
-          product['image']?.toString() ?? product['imageUrl']?.toString() ?? '',
-      rating: _getRating(product['rating']),
-      soldOut:
-          product['soldOut'] == true ||
-          product['stock'] == 0 ||
-          priceText.toUpperCase() == 'SOLD OUT',
-      vegan: product['vegan'] == true,
-      newArrival: product['newArrival'] == true || product['isNew'] == true,
-    );
-  }
+  return Product(
+    id: product['_id']?.toString() ?? product['id']?.toString() ?? '',
+    name: product['name']?.toString() ?? '',
+    brand: _getBrandName(product['brand']),
+    price: _formatPrice(priceText),
+    image:
+        product['image']?.toString() ??
+        product['imageUrl']?.toString() ??
+        '',
+    rating: _getRating(product['rating']),
+    soldOut:
+        product['soldOut'] == true ||
+        product['stock'] == 0 ||
+        priceText.toUpperCase() == 'SOLD OUT',
+    vegan: product['vegan'] == true,
+    newArrival:
+        product['newArrival'] == true ||
+        product['isNew'] == true,
+  );
+}
 
   static String _getBrandName(dynamic brand) {
     if (brand is Map) {
@@ -182,7 +183,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Product> products = [];
 
-  bool isLoadingProducts = true;
+bool isLoadingProducts = true;
 
   String? productError;
 
@@ -197,24 +198,8 @@ class _HomePageState extends State<HomePage> {
     _checkLoginStatus();
     _loadBrands();
     _loadProducts();
-
-    // Load existing cart from backend
-    _loadCart();
   }
 
-  // ============================================================
-  // LOAD CART FROM BACKEND
-  // ============================================================
-
-  Future<void> _loadCart() async {
-    final loggedIn = await AuthService.isLoggedIn();
-
-    if (!loggedIn) {
-      return;
-    }
-
-    await appCart.loadCart();
-  }
 
   // ============================================================
   // CHECK LOGIN
@@ -264,39 +249,31 @@ class _HomePageState extends State<HomePage> {
   // ============================================================
 
   Future<void> _loadProducts() async {
-    if (mounted) {
-      setState(() {
-        isLoadingProducts = true;
-        productError = null;
-      });
-    }
+    setState(() {
+      isLoadingProducts = true;
+      productError = null;
+    });
 
-    try {
-      final loadedProducts = await ProductService.getProducts();
+  try {
+    final loadedProducts = await ProductService.getProducts();
 
-      final convertedProducts = loadedProducts
-          .map<Product>((product) => Product.fromMap(product))
-          .toList();
-
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
-        products = convertedProducts;
+        products = loadedProducts
+            .map<Product>((product) => Product.fromMap(product))
+            .toList();
         isLoadingProducts = false;
       });
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
-      setState(() {
-        productError = error.toString();
-        isLoadingProducts = false;
-      });
-    }
+    setState(() {
+      productError = error.toString();
+      isLoadingProducts = false;
+    });
   }
+}
 
   // ============================================================
   // OPEN LOGIN
@@ -326,22 +303,20 @@ class _HomePageState extends State<HomePage> {
   // SEARCH PRODUCTS
   // ============================================================
 
-  List<Product> get visibleProducts {
-    final query = searchText.trim().toLowerCase();
+List<Product> get visibleProducts {
+  final query = searchText.trim().toLowerCase();
 
-    if (query.isEmpty) {
-      return products;
-    }
-
-    return products.where((product) {
-      final name = product.name.toLowerCase();
-      final brand = product.brand.toLowerCase();
-
-      return name.contains(query) || brand.contains(query);
-    }).toList();
+  if (query.isEmpty) {
+    return products;
   }
 
-  // ============================================================
+  return products.where((product) {
+    return product.name.toLowerCase().contains(query) ||
+        product.brand.toLowerCase().contains(query);
+  }).toList();
+}
+
+  // ===============================
   // SHOW MESSAGE
   // ============================================================
 
@@ -360,52 +335,58 @@ class _HomePageState extends State<HomePage> {
   // ============================================================
 
   Future<void> addToCart(Product product) async {
-    // Sold out check
-    if (product.soldOut) {
-      showMessage('Sorry, this product is sold out.');
+  // Sold out check
+  if (product.soldOut) {
+    showMessage('Sorry, this product is sold out.');
+    return;
+  }
+
+  // Product ID check
+  if (product.id.isEmpty) {
+    showMessage('Product ID missing. Please check product data.');
+    return;
+  }
+
+  // Login check
+  final loggedIn = await AuthService.isLoggedIn();
+
+  if (!loggedIn) {
+    final loginSuccess = await openLoginPage();
+
+    if (!loginSuccess) {
       return;
     }
+  }
 
-    // Product ID check
-    if (product.id.isEmpty) {
-      showMessage('Product ID missing. Please check product data.');
-      return;
-    }
-
-    // Login check
-    final loggedIn = await AuthService.isLoggedIn();
-
-    if (!loggedIn) {
-      final loginSuccess = await openLoginPage();
-
-      if (!loginSuccess) {
-        return;
-      }
-    }
-
-    try {
-      // IMPORTANT:
-      // CartModel -> CartService -> Backend -> MongoDB
-      await appCart.add({
+  try {
+    // Add product to cart
+    appCart.add(
+      {
         'id': product.id,
         'name': product.name,
         'brand': product.brand,
         'price': product.price,
         'image': product.image,
         'rating': product.rating,
-      }, 1);
+      },
+      1,
+    );
 
-      if (!mounted) {
-        return;
-      }
-
-      showMessage('${product.name} added to cart.');
-    } catch (error) {
-      showMessage('Failed to add product to cart.');
-
-      debugPrint('Add to cart error: $error');
+    if (!mounted) {
+      return;
     }
+
+    showMessage('${product.name} added to cart.');
+  } catch (error) {
+    if (!mounted) {
+      return;
+    }
+
+    showMessage('Failed to add product to cart.');
+    debugPrint('Add to cart error: $error');
   }
+}
+  
 
   // ============================================================
   // BUILD
@@ -461,16 +442,19 @@ class _HomePageState extends State<HomePage> {
   // ============================================================
 
   Widget _desktopHeader() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 180,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: isLoggedIn
+  return Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+    child: Row(
+      children: [
+        // =========================================================
+        // LEFT SIDE: CUSTOMER LOGIN / PROFILE + ADMIN
+        // =========================================================
+        SizedBox(
+          width: 280,
+          child: Row(
+            children: [
+              isLoggedIn
                   ? IconButton(
                       tooltip: 'My Profile',
                       onPressed: () {
@@ -481,7 +465,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.account_circle_outlined, size: 30),
+                      icon: const Icon(
+                        Icons.account_circle_outlined,
+                        size: 30,
+                      ),
                     )
                   : TextButton(
                       onPressed: openLoginPage,
@@ -494,59 +481,102 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-            ),
-          ),
 
-          // LOGO
-          const Expanded(
-            child: Center(
-              child: Text(
-                'K-BEAUTY BD',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
+              const SizedBox(width: 8),
+
+              // =====================================================
+              // ADMIN BUTTON
+              // =====================================================
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminLoginPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF087EF5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
+                child: const Text(
+                  'Admin',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // =========================================================
+        // LOGO
+        // =========================================================
+        const Expanded(
+          child: Center(
+            child: Text(
+              'K-BEAUTY BD',
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
               ),
             ),
           ),
+        ),
 
-          SizedBox(
-            width: 400,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  width: 260,
-                  height: 42,
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        searchText = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: const Color(0xFFF1F1F1),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                        borderSide: BorderSide.none,
-                      ),
+        // =========================================================
+        // SEARCH + CART
+        // =========================================================
+        SizedBox(
+          width: 400,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 260,
+                height: 42,
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      searchText = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: const Color(0xFFF1F1F1),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                _cartButton(),
-              ],
-            ),
+              ),
+              const SizedBox(width: 10),
+              _cartButton(),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   // ============================================================
   // MOBILE HEADER
@@ -922,37 +952,57 @@ class _HomeProductCardState extends State<_HomeProductCard> {
   // IMAGE
   // ============================================================
 
-  Widget _image(String image) {
-    if (image.startsWith('http://') || image.startsWith('https://')) {
-      return Image.network(
-        image,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(
-              Icons.image_not_supported_outlined,
-              size: 50,
-              color: Colors.black26,
-            ),
-          );
-        },
-      );
-    }
+ Widget _image(String imageUrl) {
+  if (imageUrl.isEmpty) {
+    return const Center(
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        size: 60,
+        color: Colors.grey,
+      ),
+    );
+  }
 
-    return Image.asset(
-      image,
+  if (imageUrl.startsWith('http://') ||
+      imageUrl.startsWith('https://')) {
+    return Image.network(
+      imageUrl,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         return const Center(
           child: Icon(
-            Icons.image_not_supported_outlined,
-            size: 50,
-            color: Colors.black26,
+            Icons.broken_image_outlined,
+            size: 60,
+            color: Colors.grey,
           ),
+        );
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return const Center(
+          child: CircularProgressIndicator(),
         );
       },
     );
   }
+
+  return Image.asset(
+    imageUrl,
+    fit: BoxFit.contain,
+    errorBuilder: (context, error, stackTrace) {
+      return const Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          size: 60,
+          color: Colors.grey,
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
