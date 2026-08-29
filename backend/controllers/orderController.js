@@ -4,6 +4,14 @@ const Cart = require("../models/cartModel");
 // 🛒 Place Order
 exports.placeOrder = async (req, res) => {
   try {
+    const { customerName, address, contactNo } = req.body;
+
+    if (!customerName || !address || !contactNo) {
+      return res.status(400).json({
+        message: "Name, address and contact number are required.",
+      });
+    }
+
     const cart = await Cart.findOne({
       user: req.user.id,
     }).populate("items.product");
@@ -29,8 +37,14 @@ exports.placeOrder = async (req, res) => {
 
     const order = new Order({
       user: req.user.id,
+      customerName,
+      address,
+      contactNo,
       items,
       totalAmount,
+      paymentMethod: "Cash on Delivery",
+      paymentStatus: "Pending",
+      status: "Pending",
     });
 
     await order.save();

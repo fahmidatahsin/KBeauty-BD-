@@ -7,7 +7,28 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+customerName: {
+  type: String,
+  required: true,
+  trim: true,
+},
 
+address: {
+  type: String,
+  required: true,
+  trim: true,
+},
+
+contactNo: {
+  type: String,
+  required: true,
+  trim: true,
+},
+paymentMethod: {
+  type: String,
+  enum: ["Cash on Delivery"],
+  default: "Cash on Delivery",
+},
     items: [
       {
         product: {
