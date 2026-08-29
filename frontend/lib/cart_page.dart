@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'cart_model.dart';
 import 'login_page.dart';
+import 'services/order_service.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -15,6 +16,7 @@ class _CartPageState extends State<CartPage> {
   bool _checkingLogin = true;
   bool _isLoggedIn = false;
   bool _clearing = false;
+  bool _checkingOut = false;
 
   @override
   void initState() {
@@ -130,6 +132,65 @@ class _CartPageState extends State<CartPage> {
   }
 
   // ============================================================
+  // CHECKOUT / PLACE ORDER
+  // ============================================================
+
+  Future<void> _checkout() async {
+    final cart = CartScope.of(context);
+
+    // Cart empty check
+    if (cart.items.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Your cart is empty.')));
+      return;
+    }
+
+    // Prevent double click
+    if (_checkingOut) {
+      return;
+    }
+
+    try {
+      setState(() {
+        _checkingOut = true;
+      });
+
+      // Place order through backend
+      final result = await OrderService.placeOrder();
+
+      if (!mounted) return;
+
+      // Reload cart because backend clears the cart
+      await cart.loadCart();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Order placed successfully!'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Checkout failed: $e'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _checkingOut = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
   // IMAGE
   // ============================================================
 
@@ -226,6 +287,7 @@ class _CartPageState extends State<CartPage> {
           'MY CART',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
+
         actions: [
           AnimatedBuilder(
             animation: CartScope.of(context),
@@ -237,7 +299,7 @@ class _CartPageState extends State<CartPage> {
               }
 
               return TextButton(
-                onPressed: _clearing ? null : _clearCart,
+                onPressed: _clearing || _checkingOut ? null : _clearCart,
                 child: const Text(
                   'CLEAR CART',
                   style: TextStyle(
@@ -250,8 +312,10 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ),
+
       body: AnimatedBuilder(
         animation: CartScope.of(context),
+
         builder: (context, child) {
           final cart = CartScope.of(context);
 
@@ -279,7 +343,9 @@ class _CartPageState extends State<CartPage> {
                       size: 90,
                       color: Colors.black26,
                     ),
+
                     SizedBox(height: 20),
+
                     Text(
                       'Your cart is empty.',
                       style: TextStyle(
@@ -287,7 +353,9 @@ class _CartPageState extends State<CartPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     SizedBox(height: 8),
+
                     Text(
                       'Add some products to your cart.',
                       style: TextStyle(color: Colors.black54),
@@ -307,10 +375,13 @@ class _CartPageState extends State<CartPage> {
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.all(18),
+
                   itemCount: cart.items.length,
+
                   separatorBuilder: (context, index) {
                     return const SizedBox(height: 12);
                   },
+
                   itemBuilder: (context, index) {
                     final item = cart.items[index];
 
@@ -324,9 +395,12 @@ class _CartPageState extends State<CartPage> {
               // ==================================================
               Container(
                 width: double.infinity,
+
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+
                 decoration: BoxDecoration(
                   color: Colors.white,
+
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.08),
@@ -335,17 +409,22 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ],
                 ),
+
                 child: SafeArea(
                   top: false,
+
                   child: Column(
                     children: [
+                      // TOTAL ITEMS
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                         children: [
                           const Text(
                             'TOTAL ITEMS',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
+
                           Text(
                             '${cart.totalItems}',
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -355,8 +434,10 @@ class _CartPageState extends State<CartPage> {
 
                       const SizedBox(height: 10),
 
+                      // TOTAL PRICE
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                         children: [
                           const Text(
                             'TOTAL',
@@ -365,6 +446,7 @@ class _CartPageState extends State<CartPage> {
                               fontWeight: FontWeight.w900,
                             ),
                           ),
+
                           Text(
                             '৳${cart.totalPrice.toStringAsFixed(0)}',
                             style: const TextStyle(
@@ -377,24 +459,32 @@ class _CartPageState extends State<CartPage> {
 
                       const SizedBox(height: 15),
 
+                      // ==================================================
+                      // CHECKOUT BUTTON
+                      // ==================================================
                       SizedBox(
                         width: double.infinity,
+
                         child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Checkout will be available soon.',
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.all(13),
-                            child: Text(
-                              'CHECKOUT',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                          onPressed: _checkingOut ? null : _checkout,
+
+                          child: Padding(
+                            padding: const EdgeInsets.all(13),
+
+                            child: _checkingOut
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'CHECKOUT',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -418,9 +508,12 @@ class _CartPageState extends State<CartPage> {
 
     return Container(
       padding: const EdgeInsets.all(14),
+
       decoration: BoxDecoration(
         color: Colors.white,
+
         borderRadius: BorderRadius.circular(12),
+
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -429,8 +522,10 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ),
+
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
+
         children: [
           // ==================================================
           // IMAGE
@@ -439,6 +534,7 @@ class _CartPageState extends State<CartPage> {
           SizedBox(
             width: 95,
             height: 95,
+
             child: _productImage(product['image'] ?? ''),
           ),
 
@@ -450,11 +546,15 @@ class _CartPageState extends State<CartPage> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
                 Text(
                   product['name'] ?? '',
+
                   maxLines: 2,
+
                   overflow: TextOverflow.ellipsis,
+
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -465,6 +565,7 @@ class _CartPageState extends State<CartPage> {
 
                 Text(
                   product['brand'] ?? '',
+
                   style: const TextStyle(
                     color: Color(0xFF1C6A50),
                     fontWeight: FontWeight.bold,
@@ -475,6 +576,7 @@ class _CartPageState extends State<CartPage> {
 
                 Text(
                   '৳${item.unitPrice.toStringAsFixed(0)}',
+
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -489,18 +591,25 @@ class _CartPageState extends State<CartPage> {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: () {
-                        cart.decrease(item);
-                      },
+                      onPressed: _checkingOut
+                          ? null
+                          : () {
+                              cart.decrease(item);
+                            },
+
                       icon: const Icon(Icons.remove_circle_outline),
+
                       padding: EdgeInsets.zero,
+
                       constraints: const BoxConstraints(),
                     ),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
+
                       child: Text(
                         '${item.quantity}',
+
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -509,11 +618,16 @@ class _CartPageState extends State<CartPage> {
                     ),
 
                     IconButton(
-                      onPressed: () {
-                        cart.increase(item);
-                      },
+                      onPressed: _checkingOut
+                          ? null
+                          : () {
+                              cart.increase(item);
+                            },
+
                       icon: const Icon(Icons.add_circle_outline),
+
                       padding: EdgeInsets.zero,
+
                       constraints: const BoxConstraints(),
                     ),
                   ],
@@ -523,15 +637,19 @@ class _CartPageState extends State<CartPage> {
           ),
 
           // ==================================================
-          // DELETE
+          // DELETE + TOTAL
           // ==================================================
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
             children: [
               IconButton(
-                onPressed: () {
-                  cart.remove(item);
-                },
+                onPressed: _checkingOut
+                    ? null
+                    : () {
+                        cart.remove(item);
+                      },
+
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
               ),
 
@@ -539,6 +657,7 @@ class _CartPageState extends State<CartPage> {
 
               Text(
                 '৳${item.totalPrice.toStringAsFixed(0)}',
+
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 16,

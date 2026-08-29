@@ -67,7 +67,7 @@ class ProductService {
           return {
             'id': product['_id']?.toString() ?? '',
             'name': product['name']?.toString() ?? '',
-            'brand': product['brand']?.toString() ?? '',
+            'brand': product['brand']['name'].toString(),
             'category': categoryName,
             'price': product['price']?.toString() ?? '0',
             'description': product['description']?.toString() ?? '',

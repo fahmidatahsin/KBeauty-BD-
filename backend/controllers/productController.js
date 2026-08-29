@@ -17,7 +17,7 @@ image,
 stock,
 } = req.body;
 
-```
+
     // Check category
     const existingCategory = await Category.findById(category);
 
@@ -58,7 +58,7 @@ stock,
         message: error.message,
     });
 }
-```
+
 
 };
 
@@ -73,7 +73,7 @@ const minPrice = req.query.minPrice;
 const maxPrice = req.query.maxPrice;
 const sort = req.query.sort;
 
-```
+
     const page = Number(req.query.page) || 1;
     const limit = req.query.limit ? Number(req.query.limit) : null;
     const skip = limit ? (page - 1) * limit : 0;
@@ -145,7 +145,7 @@ const sort = req.query.sort;
         message: error.message,
     });
 }
-```
+
 
 };
 
@@ -156,7 +156,7 @@ const getSingleProduct = async (req, res) => {
 try {
 const { id } = req.params;
 
-```
+
     const product = await Product.findById(id)
         .populate("category")
         .populate("brand");
@@ -173,7 +173,7 @@ const { id } = req.params;
         message: error.message,
     });
 }
-```
+
 
 };
 
@@ -184,7 +184,7 @@ const updateProduct = async (req, res) => {
 try {
 const { id } = req.params;
 
-```
+
     const {
         name,
         brand,
@@ -246,7 +246,7 @@ const { id } = req.params;
         message: error.message,
     });
 }
-```
+
 
 };
 
@@ -257,7 +257,7 @@ const deleteProduct = async (req, res) => {
 try {
 const { id } = req.params;
 
-```
+
     const product = await Product.findById(id);
 
     if (!product) {
@@ -276,7 +276,7 @@ const { id } = req.params;
         message: error.message,
     });
 }
-```
+
 
 };
 

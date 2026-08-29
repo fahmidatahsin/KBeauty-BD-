@@ -831,7 +831,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisCount: columns,
           crossAxisSpacing: 22,
           mainAxisSpacing: 30,
-          childAspectRatio: isMobile ? 0.54 : 0.65,
+          childAspectRatio: isMobile ? 0.48 : 0.65,
         ),
         itemBuilder: (context, index) {
           return _productCard(visibleProducts[index]);
