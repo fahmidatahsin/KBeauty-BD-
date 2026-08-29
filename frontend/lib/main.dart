@@ -5,10 +5,12 @@ import 'cart_page.dart';
 import 'brand_page.dart';
 import 'product_detail_page.dart';
 import 'login_page.dart';
+import 'admin_login_page.dart';
 import 'profile_page.dart';
 import 'auth_service.dart';
 import 'brand_service.dart';
 import 'services/product_service.dart';
+
 
 final CartModel appCart = CartModel();
 
@@ -29,7 +31,9 @@ class KBeautyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFF4F3F1),
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1C6A50)),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF1C6A50),
+          ),
         ),
         home: const HomePage(),
       ),
@@ -57,6 +61,73 @@ class Product {
     this.vegan = false,
     this.newArrival = false,
   });
+
+  factory Product.fromMap(Map<String, dynamic> product) {
+    final dynamic rawPrice = product['price'];
+    final priceText = rawPrice?.toString() ?? '';
+
+    return Product(
+      name: product['name']?.toString() ?? '',
+      brand: _getBrandName(product['brand']),
+      price: _formatPrice(priceText),
+      image: product['image']?.toString() ??
+          product['imageUrl']?.toString() ??
+          '',
+      rating: _getRating(product['rating']),
+      soldOut: product['soldOut'] == true ||
+          product['stock'] == 0 ||
+          priceText.toUpperCase() == 'SOLD OUT',
+      vegan: product['vegan'] == true,
+      newArrival: product['newArrival'] == true ||
+          product['isNew'] == true,
+    );
+  }
+
+  static String _getBrandName(dynamic brand) {
+    if (brand is Map) {
+      return brand['name']?.toString() ?? '';
+    }
+    return brand?.toString() ?? '';
+  }
+
+  static String _formatPrice(String price) {
+    if (price.isEmpty) return '';
+
+    if (price.toUpperCase() == 'SOLD OUT') {
+      return 'SOLD OUT';
+    }
+
+    if (price.contains('৳')) {
+      return price;
+    }
+
+    final number = double.tryParse(price);
+    if (number != null) {
+      return '৳${number.toStringAsFixed(2)}';
+    }
+
+    return price;
+  }
+
+  static String _getRating(dynamic rating) {
+    if (rating == null) return '★★★★★';
+
+    if (rating is num) {
+      final rounded = rating.round().clamp(0, 5);
+      return '${'★' * rounded}${'☆' * (5 - rounded)}';
+    }
+
+    final text = rating.toString();
+    if (text.contains('★') || text.contains('☆')) return text;
+
+    final number = double.tryParse(text);
+    if (number != null) {
+      final rounded = number.round().clamp(0, 5);
+      return '${'★' * rounded}${'☆' * (5 - rounded)}';
+    }
+
+    return '★★★★★';
+  }
 }
 
 class HomePage extends StatefulWidget {
@@ -70,34 +141,20 @@ class _HomePageState extends State<HomePage> {
   String searchText = '';
   bool isLoggedIn = false;
 
-  // ===============================
-  // BRANDS
-  // ===============================
-
   List<String> brands = [];
+  List<Product> products = [];
+
   bool isLoadingBrands = true;
-
-  // ===============================
-  // PRODUCTS FROM API
-  // ===============================
-
-  List<Map<String, String>> allProducts = [];
-
   bool isLoadingProducts = true;
   String? productError;
 
   @override
   void initState() {
     super.initState();
-
     _checkLoginStatus();
     _loadBrands();
-    loadProducts();
+    _loadProducts();
   }
-
-  // ===============================
-  // CHECK LOGIN STATUS
-  // ===============================
 
   Future<void> _checkLoginStatus() async {
     final loggedIn = await AuthService.isLoggedIn();
@@ -109,10 +166,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // ===============================
-  // LOAD BRANDS FROM API
-  // ===============================
-
   Future<void> _loadBrands() async {
     try {
       final loadedBrands = await BrandService.getBrands();
@@ -123,47 +176,41 @@ class _HomePageState extends State<HomePage> {
         brands = loadedBrands;
         isLoadingBrands = false;
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
 
       setState(() {
         isLoadingBrands = false;
       });
-
-      debugPrint('Failed to load brands: $error');
     }
   }
 
-  // ===============================
-  // LOAD PRODUCTS FROM API
-  // ===============================
+  Future<void> _loadProducts() async {
+    setState(() {
+      isLoadingProducts = true;
+      productError = null;
+    });
 
-  Future<void> loadProducts() async {
     try {
-      final fetchedProducts = await ProductService.getProducts();
+      final loadedProducts = await ProductService.getProducts();
 
       if (!mounted) return;
 
       setState(() {
-        allProducts = fetchedProducts;
+        products = loadedProducts
+            .map<Product>((product) => Product.fromMap(product))
+            .toList();
         isLoadingProducts = false;
-        productError = null;
       });
     } catch (error) {
       if (!mounted) return;
 
       setState(() {
-        isLoadingProducts = false;
         productError = error.toString();
+        isLoadingProducts = false;
       });
-
-      debugPrint('Failed to load products: $error');
     }
   }
-
-  // ===============================
-  // OPEN LOGIN PAGE
-  // ===============================
 
   Future<bool> openLoginPage() async {
     final result = await Navigator.push(
@@ -175,79 +222,45 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLoggedIn = true;
       });
-
       return true;
     }
 
     return false;
   }
 
-  // ===============================
-  // SEARCH PRODUCTS
-  // ===============================
-
-  List<Product> get visibleProducts {
-    final query = searchText.trim().toLowerCase();
-
-    return allProducts
-        .where((product) {
-          if (query.isEmpty) {
-            return true;
-          }
-
-          final name = product['name']?.toLowerCase() ?? '';
-          final brand = product['brand']?.toLowerCase() ?? '';
-
-          return name.contains(query) || brand.contains(query);
-        })
-        .map(
-          (product) => Product(
-            name: product['name'] ?? '',
-            brand: product['brand'] ?? '',
-            price: product['price'] ?? '',
-            image: product['image'] ?? '',
-            rating: product['rating'] ?? '★★★★★',
-            soldOut: product['price'] == 'SOLD OUT',
-            vegan: product['vegan'] == 'true',
-            newArrival: product['newArrival'] == 'true',
-          ),
-        )
-        .toList();
+ List<Product> get visibleProducts {
+  if (searchText.trim().isEmpty) {
+    return [];
   }
 
-  // ===============================
-  // SHOW MESSAGE
-  // ===============================
+  final query = searchText.trim().toLowerCase();
+
+  return products.where((product) {
+    return product.name.toLowerCase().contains(query) ||
+        product.brand.toLowerCase().contains(query);
+  }).toList();
+}
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
-  // ===============================
-  // ADD TO CART
-  // ===============================
-
   Future<void> addToCart(Product product) async {
-    // Sold out check
     if (product.soldOut) {
       showMessage('Sorry, this product is sold out.');
       return;
     }
 
-    // Login check
     final loggedIn = await AuthService.isLoggedIn();
 
     if (!loggedIn) {
       final loginSuccess = await openLoginPage();
 
-      if (!loginSuccess) {
-        return;
-      }
+      if (!loginSuccess) return;
     }
 
-    // Add product to cart
     appCart.add({
       'name': product.name,
       'brand': product.brand,
@@ -259,13 +272,8 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
 
     setState(() {});
-
     showMessage('${product.name} added to cart.');
   }
-
-  // ===============================
-  // BUILD
-  // ===============================
 
   @override
   Widget build(BuildContext context) {
@@ -286,11 +294,11 @@ class _HomePageState extends State<HomePage> {
                 ],
 
                 if (searchText.trim().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 30, 32, 0),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(32, 30, 32, 0),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: const Text(
+                      child: Text(
                         'SEARCH RESULTS',
                         style: TextStyle(
                           fontSize: 28,
@@ -301,7 +309,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                _productSection(constraints.maxWidth),
+                if (searchText.trim().isNotEmpty)
+  _productSection(constraints.maxWidth),
               ],
             ),
           );
@@ -310,49 +319,72 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // DESKTOP HEADER
-  // ===============================
-
   Widget _desktopHeader() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       child: Row(
         children: [
-          // LOGIN / PROFILE
           SizedBox(
-            width: 180,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: isLoggedIn
-                  ? IconButton(
-                      tooltip: 'My Profile',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProfilePage(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.account_circle_outlined, size: 30),
-                    )
-                  : TextButton(
-                      onPressed: openLoginPage,
-                      child: const Text(
-                        'LOGIN',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
+  width: 180,
+  child: Align(
+    alignment: Alignment.centerLeft,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        isLoggedIn
+            ? IconButton(
+                tooltip: 'My Profile',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProfilePage(),
                     ),
+                  );
+                },
+                icon: const Icon(
+                  Icons.account_circle_outlined,
+                  size: 30,
+                ),
+              )
+            : TextButton(
+                onPressed: openLoginPage,
+                child: const Text(
+                  'LOGIN',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+
+        const SizedBox(width: 5),
+
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AdminLoginPage(),
+              ),
+            );
+          },
+          child: const Text(
+            'ADMIN',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
             ),
           ),
+        ),
+      ],
+    ),
+  ),
+),
 
-          // LOGO
           const Expanded(
             child: Center(
               child: Text(
@@ -366,7 +398,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // SEARCH + CART
           SizedBox(
             width: 400,
             child: Row(
@@ -404,10 +435,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // MOBILE HEADER
-  // ===============================
-
   Widget _mobileHeader() {
     return Container(
       color: Colors.white,
@@ -416,7 +443,6 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              // PROFILE / LOGIN
               isLoggedIn
                   ? IconButton(
                       tooltip: 'My Profile',
@@ -441,23 +467,23 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-              // LOGO
               const Expanded(
                 child: Text(
                   'K-BEAUTY BD',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
 
-              // CART
               _cartButton(),
             ],
           ),
 
           const SizedBox(height: 8),
 
-          // SEARCH
           TextField(
             onChanged: (value) {
               setState(() {
@@ -480,10 +506,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // CART BUTTON
-  // ===============================
-
   Widget _cartButton() {
     return Stack(
       children: [
@@ -496,7 +518,6 @@ class _HomePageState extends State<HomePage> {
           },
           icon: const Icon(Icons.shopping_bag_outlined),
         ),
-
         if (appCart.totalItems > 0)
           Positioned(
             top: 4,
@@ -506,7 +527,10 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: Colors.deepOrange,
               child: Text(
                 '${appCart.totalItems}',
-                style: const TextStyle(color: Colors.white, fontSize: 10),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                ),
               ),
             ),
           ),
@@ -514,21 +538,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // HERO
-  // ===============================
-
   Widget _hero(bool isDesktop) {
     return SizedBox(
       width: double.infinity,
       height: isDesktop ? 380 : 240,
-      child: Image.asset('assets/images/hero-banner-1.jpg', fit: BoxFit.cover),
+      child: Image.asset(
+        'assets/images/hero-banner-1.jpg',
+        fit: BoxFit.cover,
+      ),
     );
   }
-
-  // ===============================
-  // INTRO
-  // ===============================
 
   Widget _intro() {
     return Container(
@@ -548,22 +567,23 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 18),
           Text(
             "Skin care is a personal journey and we're here to guide you along the way.",
-            style: TextStyle(fontSize: 19, color: Color(0xFF3F3F3F)),
+            style: TextStyle(
+              fontSize: 19,
+              color: Color(0xFF3F3F3F),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ===============================
-  // BRAND FILTERS
-  // ===============================
-
   Widget _brandFilters() {
     if (isLoadingBrands) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
@@ -577,22 +597,34 @@ class _HomePageState extends State<HomePage> {
         runSpacing: 8,
         children: allBrands.map((brand) {
           return TextButton(
-            onPressed: () {
-              if (brand == 'ALL') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CatalogPage()),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        BrandPage(brand: brand, products: allProducts),
-                  ),
-                );
-              }
-            },
+          onPressed: () {
+  if (brand == 'ALL') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CatalogPage(),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BrandPage(
+          brand: brand,
+          products: products.map((product) {
+            return {
+              'name': product.name,
+              'brand': product.brand,
+              'price': product.price,
+              'image': product.image,
+              'rating': product.rating,
+            };
+          }).toList(),
+        ),
+      ),
+    );
+  }
+},
             child: Text(
               brand.toUpperCase(),
               style: TextStyle(
@@ -608,67 +640,46 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // PRODUCT SECTION
-  // ===============================
-
   Widget _productSection(double width) {
     final isMobile = width < 650;
-
     final columns = width >= 1200
         ? 4
         : width >= 750
-        ? 3
-        : 2;
-
-    // ===============================
-    // API LOADING
-    // ===============================
+            ? 3
+            : 2;
 
     if (isLoadingProducts) {
       return const Padding(
-        padding: EdgeInsets.all(80),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.all(60),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
-
-    // ===============================
-    // API ERROR
-    // ===============================
 
     if (productError != null) {
       return Padding(
         padding: const EdgeInsets.all(50),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, size: 50),
-
-            const SizedBox(height: 15),
-
+            const Icon(Icons.error_outline, size: 60),
+            const SizedBox(height: 16),
             const Text(
               'Failed to load products.',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-
-            const SizedBox(height: 8),
-
+            const SizedBox(height: 10),
             Text(
               productError!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54),
+              style: const TextStyle(color: Colors.grey),
             ),
-
             const SizedBox(height: 20),
-
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  isLoadingProducts = true;
-                  productError = null;
-                });
-
-                loadProducts();
-              },
+              onPressed: _loadProducts,
               child: const Text('RETRY'),
             ),
           ],
@@ -676,22 +687,20 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // ===============================
-    // NO PRODUCTS
-    // ===============================
-
     if (visibleProducts.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(50),
-        child: Center(
-          child: Text('No products found.', style: TextStyle(fontSize: 18)),
-        ),
-      );
-    }
+  // Keep the home page empty when there is no search.
+  if (searchText.trim().isEmpty) {
+    return const SizedBox.shrink();
+  }
 
-    // ===============================
-    // API PRODUCTS
-    // ===============================
+  return const Padding(
+    padding: EdgeInsets.all(50),
+    child: Text(
+      'No products found.',
+      style: TextStyle(fontSize: 18),
+    ),
+  );
+}
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 1500),
@@ -713,14 +722,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===============================
-  // PRODUCT CARD
-  // ===============================
-
   Widget _productCard(Product product) {
     return _HomeProductCard(
       product: product,
-
       onTap: () {
         final productData = <String, String>{
           'name': product.name,
@@ -737,21 +741,20 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
-
       onAddToCart: () => addToCart(product),
     );
   }
 }
 
-// ======================================================
-// BADGE
-// ======================================================
-
 class Badge extends StatelessWidget {
   final String text;
   final Color color;
 
-  const Badge({super.key, required this.text, required this.color});
+  const Badge({
+    super.key,
+    required this.text,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -768,10 +771,6 @@ class Badge extends StatelessWidget {
     );
   }
 }
-
-// ======================================================
-// HOME PRODUCT CARD
-// ======================================================
 
 class _HomeProductCard extends StatefulWidget {
   final Product product;
@@ -797,48 +796,29 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-
-      onEnter: (_) {
-        setState(() {
-          hovering = true;
-        });
-      },
-
-      onExit: (_) {
-        setState(() {
-          hovering = false;
-        });
-      },
-
+      onEnter: (_) => setState(() => hovering = true),
+      onExit: (_) => setState(() => hovering = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-
         transform: Matrix4.translationValues(0, hovering ? -9 : 0, 0),
-
         padding: const EdgeInsets.all(16),
-
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: hovering ? 0.18 : 0.06),
+              color: Colors.black.withValues(
+                alpha: hovering ? 0.18 : 0.06,
+              ),
               blurRadius: hovering ? 18 : 8,
               offset: Offset(0, hovering ? 10 : 4),
             ),
           ],
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-
           children: [
-            // ===============================
-            // IMAGE + BADGES
-            // ===============================
-
             Expanded(
               child: Stack(
                 children: [
@@ -849,37 +829,37 @@ class _HomeProductCardState extends State<_HomeProductCard> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-
-                    child: Image.asset(
-                      product.image,
-                      fit: BoxFit.contain,
-
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: Icon(
+                    child: product.image.isNotEmpty
+                        ? Image.network(
+                            product.image,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) =>
+                                const Icon(Icons.image_not_supported_outlined),
+                          )
+                        : const Icon(
                             Icons.image_not_supported_outlined,
                             size: 50,
-                            color: Colors.black26,
                           ),
-                        );
-                      },
-                    ),
                   ),
 
-                  // VEGAN BADGE
                   if (product.vegan)
                     const Positioned(
                       top: 10,
                       left: 10,
-                      child: Badge(text: 'Vegan', color: Color(0xFF167C59)),
+                      child: Badge(
+                        text: 'Vegan',
+                        color: Color(0xFF167C59),
+                      ),
                     ),
 
-                  // NEW ARRIVAL BADGE
                   if (product.newArrival)
                     const Positioned(
                       top: 66,
                       left: 10,
-                      child: Badge(text: 'New', color: Color(0xFF5635A8)),
+                      child: Badge(
+                        text: 'New',
+                        color: Color(0xFF5635A8),
+                      ),
                     ),
                 ],
               ),
@@ -887,22 +867,19 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 12),
 
-            // ===============================
-            // PRODUCT NAME
-            // ===============================
             Text(
               product.name,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
 
             const SizedBox(height: 5),
 
-            // ===============================
-            // BRAND
-            // ===============================
             Text(
               product.brand,
               textAlign: TextAlign.center,
@@ -916,9 +893,6 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 5),
 
-            // ===============================
-            // RATING
-            // ===============================
             Text(
               product.rating,
               textAlign: TextAlign.center,
@@ -931,32 +905,25 @@ class _HomeProductCardState extends State<_HomeProductCard> {
 
             const SizedBox(height: 4),
 
-            // ===============================
-            // PRICE
-            // ===============================
             Text(
               product.price,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: product.soldOut ? Colors.red.shade700 : Colors.black54,
+                color: product.soldOut
+                    ? Colors.red.shade700
+                    : Colors.black54,
               ),
             ),
 
             const SizedBox(height: 8),
 
-            // ===============================
-            // VIEW DETAILS
-            // ===============================
             OutlinedButton(
               onPressed: widget.onTap,
               child: const Text('VIEW DETAILS'),
             ),
 
-            // ===============================
-            // ADD TO CART
-            // ===============================
             if (!product.soldOut)
               TextButton(
                 onPressed: widget.onAddToCart,

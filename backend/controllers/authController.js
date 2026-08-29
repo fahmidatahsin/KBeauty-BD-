@@ -98,7 +98,65 @@ const loginUser = async (req, res) => {
     });
   }
 };
+// ============================================================
+// ADMIN LOGIN
+// ============================================================
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid admin email or password",
+      });
+    }
+
+    // Only users with admin role can access admin login
+    if (user.role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied. Admin account required.",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid admin email or password",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        fullName: user.fullName,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.status(200).json({
+      message: "Admin login successful",
+      token,
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 // ============================================================
 // GET LOGGED-IN USER PROFILE
 // ============================================================
@@ -272,6 +330,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  loginAdmin,
   getProfile,
   updateProfile,
   forgotPassword,

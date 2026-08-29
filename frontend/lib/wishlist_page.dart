@@ -334,7 +334,7 @@ class _WishlistPageState extends State<WishlistPage> {
                             image,
                             fit: BoxFit.cover,
                             errorBuilder:
-                                (_, __, ___) {
+                                (_, _, _) {
                               return const Icon(
                                 Icons.image_not_supported,
                                 size: 50,
