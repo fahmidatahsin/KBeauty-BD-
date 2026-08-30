@@ -1,10 +1,9 @@
 import 'dart:convert';
-
-import 'main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'auth_service.dart';
+import 'main.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -41,7 +40,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool isLoadingTable = false;
 
   String? errorMessage;
-
   // ============================================================
   // INIT
   // ============================================================
@@ -49,6 +47,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void initState() {
     super.initState();
+
     _loadDashboardStats();
   }
 
@@ -319,14 +318,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _showAddProductDialog() async {
     try {
       final brands = await _loadProductOptions('brands');
+
       final categories = await _loadProductOptions('categories');
 
       if (!mounted) return;
 
       final nameController = TextEditingController();
+
       final priceController = TextEditingController();
+
       final descriptionController = TextEditingController();
+
       final imageController = TextEditingController();
+
       final stockController = TextEditingController(text: '0');
 
       String? selectedBrand;
@@ -627,6 +631,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _showEditProductDialog(Map<String, dynamic> product) async {
     try {
       final brands = await _loadProductOptions('brands');
+
       final categories = await _loadProductOptions('categories');
 
       if (!mounted) return;
@@ -704,7 +709,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   'description': descriptionController.text.trim(),
                   'image': imageController.text.trim(),
                   'stock': stock,
-                }, successMessage: 'Product updated successfully');
+                });
 
                 if (!success) {
                   if (!dialogBuildContext.mounted) {
@@ -939,23 +944,36 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       if (response.statusCode == 200) {
         if (!mounted) return;
 
+        List<dynamic> loadedOrders = [];
+
+        if (data is Map && data['orders'] is List) {
+          loadedOrders = List<dynamic>.from(data['orders']);
+        } else if (data is List) {
+          loadedOrders = List<dynamic>.from(data);
+        }
+
         setState(() {
-          orders = data['orders'] ?? [];
+          orders = loadedOrders;
           isLoadingTable = false;
         });
       } else {
-        throw Exception(data['message'] ?? 'Failed to load orders');
+        String message = 'Failed to load orders';
+
+        if (data is Map && data['message'] != null) {
+          message = data['message'].toString();
+        }
+
+        throw Exception(message);
       }
     } catch (e) {
       if (!mounted) return;
 
       setState(() {
         isLoadingTable = false;
-        errorMessage = e.toString();
+        errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
-
   // ============================================================
   // CHANGE PAGE
   // ============================================================
@@ -1097,7 +1115,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       body: Row(
         children: [
           // ======================================================
-          // LEFT SIDEBAR
+          // SIDEBAR
           // ======================================================
 
           Container(
@@ -1106,6 +1124,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             decoration: const BoxDecoration(color: Color(0xFF0969E8)),
             child: Column(
               children: [
+                // LOGO
                 const Padding(
                   padding: EdgeInsets.only(
                     top: 35,
@@ -1126,6 +1145,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
+                // DASHBOARD
                 _sidebarItem(
                   icon: Icons.dashboard_outlined,
                   title: 'Dashboard',
@@ -1135,6 +1155,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
+                // PRODUCTS
                 _sidebarItem(
                   icon: Icons.inventory_2_outlined,
                   title: 'Products',
@@ -1144,6 +1165,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
+                // ORDERS
                 _sidebarItem(
                   icon: Icons.shopping_bag_outlined,
                   title: 'Orders',
@@ -1153,6 +1175,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
 
+                // USERS
                 _sidebarItem(
                   icon: Icons.people_outline,
                   title: 'Users',
@@ -1164,6 +1187,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                 const Spacer(),
 
+                // LOGOUT
                 Padding(
                   padding: const EdgeInsets.only(
                     left: 20,
@@ -1207,6 +1231,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
 
+                // FOOTER
                 const Padding(
                   padding: EdgeInsets.only(left: 30, bottom: 25),
                   child: Align(
@@ -1250,7 +1275,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   // ============================================================
-  // CURRENT PAGE CONTENT
+  // CURRENT PAGE
   // ============================================================
 
   Widget _buildCurrentPage() {
@@ -1297,6 +1322,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         if (errorMessage != null) _errorBox(),
 
+        // ========================================================
+        // STATISTICS
+        // ========================================================
         LayoutBuilder(
           builder: (context, constraints) {
             final isSmall = constraints.maxWidth < 800;
@@ -1304,13 +1332,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+
               crossAxisCount: isSmall ? 1 : 3,
+
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
 
-              // FIXED:
-              // stat card height increased slightly
-              childAspectRatio: isSmall ? 4.2 : 2.1,
+              // FIXED
+              childAspectRatio: isSmall ? 4.5 : 1.8,
 
               children: [
                 _statCard(
@@ -1337,11 +1366,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           },
         ),
 
-        const SizedBox(height: 30),
+        const SizedBox(height: 35),
 
-        // ======================================================
+        // ========================================================
         // QUICK ACCESS
-        // ======================================================
+        // ========================================================
         const Text(
           'Quick Access',
           style: TextStyle(
@@ -1367,18 +1396,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               mainAxisSpacing: 20,
 
               // ==================================================
-              // IMPORTANT FIX
+              // IMPORTANT OVERFLOW FIX
               // ==================================================
               //
-              // Previously:
-              // childAspectRatio: isSmall ? 3.2 : 2.5
+              // OLD:
+              // childAspectRatio: 2.5
               //
-              // That made desktop cards too short and caused:
-              // BOTTOM OVERFLOWED BY 30/50 PIXELS
+              // NEW:
+              // 2.0 gives the cards more vertical space.
               //
-              // New height is larger.
-              //
-              childAspectRatio: isSmall ? 3.5 : 1.95,
+              childAspectRatio: isSmall ? 3.5 : 2.0,
 
               children: [
                 _dashboardCard(
@@ -1411,6 +1438,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             );
           },
         ),
+
+        // Extra space at bottom
+        const SizedBox(height: 30),
       ],
     );
   }
@@ -1483,6 +1513,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             final productId = product['_id']?.toString();
 
             final brand = product['brand'];
+
             final category = product['category'];
 
             final brandName = _entityName(brand);
@@ -1756,7 +1787,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       child: InkWell(
-        borderRadius: BorderRadius.circular(0),
         onTap: onTap,
         child: Container(
           height: 52,
@@ -1801,6 +1831,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Card(
       color: Colors.white,
       elevation: 2,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -1822,6 +1853,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
@@ -1864,20 +1896,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Card(
       color: Colors.white,
       elevation: 2,
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          // ====================================================
-          // FIX:
-          // reduced vertical padding from 20 to 16
-          // ====================================================
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          // Reduced vertical padding so
+          // the content fits safely.
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // ICON
               Container(
                 width: 55,
                 height: 55,
@@ -1888,13 +1920,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 child: Icon(icon, size: 30, color: const Color(0xFF0969E8)),
               ),
 
-              const SizedBox(width: 16),
+              const SizedBox(width: 15),
 
+              // TEXT
               Expanded(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       title,
@@ -1915,7 +1948,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 13,
-                        height: 1.25,
+                        height: 1.2,
                         color: Colors.black54,
                       ),
                     ),
@@ -1925,6 +1958,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
               const SizedBox(width: 8),
 
+              // ARROW
               const Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
@@ -2042,6 +2076,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
+
                 onConfirm();
               },
               style: ElevatedButton.styleFrom(

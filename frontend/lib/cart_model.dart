@@ -46,7 +46,7 @@ class CartModel extends ChangeNotifier {
   }
 
   // ============================================================
-  // LOAD CART FROM BACKEND
+  // LOAD CART
   // ============================================================
 
   Future<void> loadCart() async {
@@ -177,7 +177,7 @@ class CartModel extends ChangeNotifier {
   }
 
   // ============================================================
-  // REMOVE SINGLE ITEM
+  // REMOVE ITEM
   // ============================================================
 
   Future<void> remove(CartItem item) async {
@@ -198,8 +198,10 @@ class CartModel extends ChangeNotifier {
 
   Future<void> clearCart() async {
     try {
+      // First clear backend cart.
       await _cartService.clearCart();
 
+      // Then clear local cart.
       _items.clear();
 
       notifyListeners();
@@ -207,15 +209,6 @@ class CartModel extends ChangeNotifier {
       debugPrint('Clear cart error: $e');
       rethrow;
     }
-  }
-
-  // ============================================================
-  // CLEAR LOCAL ONLY
-  // ============================================================
-
-  void clear() {
-    _items.clear();
-    notifyListeners();
   }
 }
 

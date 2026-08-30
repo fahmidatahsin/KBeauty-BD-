@@ -58,10 +58,7 @@ exports.getDashboardStats = async (req, res) => {
     const salesResult = await Order.aggregate([
       {
         $match: {
-          paymentStatus: "Paid",
-          status: {
-            $ne: "Cancelled",
-          },
+          status: "Delivered",
         },
       },
       {
@@ -85,12 +82,13 @@ exports.getDashboardStats = async (req, res) => {
       totalSales,
     });
   } catch (error) {
+    console.error("Dashboard stats error:", error);
+
     res.status(500).json({
       message: error.message,
     });
   }
 };
-
 // ============================================================
 // MANAGE PRODUCTS
 // ============================================================
@@ -142,19 +140,23 @@ exports.deleteProduct = async (req, res) => {
 // ============================================================
 
 // Get all orders
+// ============================================================
+// 🛒 GET ALL ORDERS - ADMIN
+// ============================================================
+
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "-password")
+      .populate("user", "fullName email phone")
       .populate("items.product")
-      .sort({
-        createdAt: -1,
-      });
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       orders,
     });
   } catch (error) {
+    console.error("Admin get all orders error:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -162,6 +164,10 @@ exports.getAllOrders = async (req, res) => {
 };
 
 // Update order status
+// ============================================================
+// 🛒 UPDATE ORDER STATUS - ADMIN
+// ============================================================
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -191,13 +197,30 @@ exports.updateOrderStatus = async (req, res) => {
 
     order.status = status;
 
+    // Cash on Delivery:
+    // Order delivered হলে payment paid হিসেবে mark হবে
+    if (status === "Delivered") {
+      order.paymentStatus = "Paid";
+    }
+
+    // Cancelled হলে payment cancelled থাকবে
+    if (status === "Cancelled") {
+      order.paymentStatus = "Cancelled";
+    }
+
     await order.save();
+
+    const updatedOrder = await Order.findById(id)
+      .populate("user", "fullName email phone")
+      .populate("items.product");
 
     res.status(200).json({
       message: "Order status updated successfully",
-      order,
+      order: updatedOrder,
     });
   } catch (error) {
+    console.error("Admin update order status error:", error);
+
     res.status(500).json({
       message: error.message,
     });

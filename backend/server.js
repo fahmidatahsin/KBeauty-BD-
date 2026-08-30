@@ -1,9 +1,6 @@
 const path = require("path");
 const express = require("express");
 
-const orderRoutes = require("./routes/orderRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-
 require("dotenv").config({
   path: path.join(__dirname, ".env"),
 });
@@ -19,13 +16,6 @@ app.use(
   "/assets/images",
   express.static(path.join(__dirname, "uploads"))
 );
-
-// ============================================================
-// ROUTES
-// ============================================================
-
-app.use("/api/orders", orderRoutes);
-app.use("/api/admin", adminRoutes);
 
 // ============================================================
 // PORT

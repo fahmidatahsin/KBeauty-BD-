@@ -272,6 +272,52 @@ class _WishlistPageState extends State<WishlistPage> {
   }
 
   // ============================================================
+  // PRODUCT IMAGE
+  // ============================================================
+
+  Widget _buildProductImage(String image) {
+    final value = image.trim();
+
+    if (value.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          size: 50,
+          color: Colors.black26,
+        ),
+      );
+    }
+
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return Image.network(
+        value,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            size: 50,
+            color: Colors.black26,
+          ),
+        ),
+      );
+    }
+
+    // Backend returns paths such as: assets/images/Foo.jpg
+    // These are Flutter assets, not network URLs.
+    return Image.asset(
+      value,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => const Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          size: 50,
+          color: Colors.black26,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
   // PRODUCT CARD
   // ============================================================
 
@@ -330,18 +376,7 @@ class _WishlistPageState extends State<WishlistPage> {
                               const BorderRadius.vertical(
                             top: Radius.circular(10),
                           ),
-                          child: Image.network(
-                            image,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, _, _) {
-                              return const Icon(
-                                Icons.image_not_supported,
-                                size: 50,
-                                color: Colors.black26,
-                              );
-                            },
-                          ),
+                          child: _buildProductImage(image),
                         )
                       : const Icon(
                           Icons.image_outlined,

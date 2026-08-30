@@ -33,7 +33,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('${AuthService.baseUrl}/auth/admin-login'),
+        Uri.parse('https://kbeauty-bd.onrender.com/api/auth/admin-login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
